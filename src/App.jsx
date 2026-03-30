@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 
 /**
  * 美甲算算 NailCalc - 核心組件
@@ -341,6 +341,434 @@ const theme = {
   },
 };
 
+const LOCALE_STORAGE_KEY = "app_locale";
+
+const SUPPORTED_LOCALES = /** @type {const} */ (["zh-TW", "zh-CN", "en"]);
+
+/** @typedef {(typeof SUPPORTED_LOCALES)[number]} AppLocale */
+
+const normalizeLocale = (raw) => {
+  if (!raw) return "zh-TW";
+  const v = String(raw).trim();
+  if (v === "zh-TW" || v === "zh-HK" || v === "zh-MO") return "zh-TW";
+  if (v === "zh-CN" || v === "zh-SG" || v === "zh") return "zh-CN";
+  if (v.startsWith("zh")) {
+    // 粗略處理 zh-XX：若包含 Hans 視為簡體，否則預設繁體
+    return v.toLowerCase().includes("hans") ? "zh-CN" : "zh-TW";
+  }
+  if (v.startsWith("en")) return "en";
+  return "zh-TW";
+};
+
+const detectLocaleFromNavigator = () => {
+  if (typeof navigator === "undefined") return "zh-TW";
+  const langs = [
+    navigator.language,
+    ...(navigator.languages || []),
+  ].filter(Boolean);
+  for (const l of langs) {
+    const n = normalizeLocale(l);
+    if (SUPPORTED_LOCALES.includes(n)) return n;
+  }
+  return "zh-TW";
+};
+
+const getInitialLocale = () => {
+  try {
+    const stored = localStorage.getItem(LOCALE_STORAGE_KEY);
+    if (stored && SUPPORTED_LOCALES.includes(/** @type {any} */ (stored))) {
+      return /** @type {AppLocale} */ (stored);
+    }
+  } catch {
+    // ignore
+  }
+  return detectLocaleFromNavigator();
+};
+
+/** @type {Record<AppLocale, Record<string, string>>} */
+const UI_STRINGS = {
+  "zh-TW": {
+    appTitle: "美甲算算 NailCalc",
+    languageLabel: "介面語言",
+    languageHint: "預設會依你的系統語言自動選擇；你也可以在這裡手動覆寫並記住。",
+    language_zhTW: "繁體中文",
+    language_zhCN: "简体中文",
+    language_en: "English",
+
+    studioNameLabel: "工作室名稱 Studio Name",
+    studioNameHint: "※ 名稱將顯示於消費明細抬頭",
+
+    pricingTitle: "價格設定",
+    pricingLabel: "Pricing",
+
+    sectionRemovalTitle: "卸甲服務",
+    sectionRemovalLabel: "Removal",
+    sectionBaseTitle: "款式基礎",
+    sectionBaseLabel: "Base Style",
+    sectionAddonsTitle: "加購造型",
+    sectionAddonsLabel: "Add-ons",
+    sectionSpaTitle: "護理保養",
+    sectionSpaLabel: "Spa & Care",
+    sectionOthersTitle: "其他加購",
+    sectionOthersLabel: "Others",
+    sectionDiscountTitle: "優惠折抵",
+    sectionDiscountLabel: "Discount",
+
+    perFinger: "/ 指",
+
+    otherProduct: "產品加購",
+    otherService: "其他服務",
+
+    discountNone: "無",
+    discount95: "95折",
+    discount9: "9折",
+    discount85: "85折",
+    discount8: "8折",
+    discountFixed: "折 ${v}",
+    discountCustom: "自定義折抵",
+
+    reportsTitle: "營收報表",
+    reportsLabel: "Reports",
+    monthQuery: "查詢月份",
+    revenueMonth: "當月營收",
+    visitsMonth: "當月服務人次",
+    checkoutRecords: "結帳紀錄",
+    exportCsv: "匯出 CSV",
+    noRecordsMonth: "該月份尚無紀錄",
+
+    saveChanges: "儲存修改",
+
+    bottomDiscounted: "已折抵",
+    copy: "複製",
+    copied: "已複製",
+    checkout: "結帳",
+
+    modalTitle: "消費明細",
+    back: "返回",
+    copyAndClose: "複製並關閉",
+
+    newAddonTitle: "新增加購項目",
+    addonNamePh: "加購名稱",
+    addItem: "新增項目",
+    ariaDeleteAddon: "刪除加購項目",
+
+    newBaseTitle: "新增款式項目",
+    baseNamePh: "款式名稱",
+    ariaDeleteBase: "刪除款式項目",
+
+    errAddonName: "請輸入加購名稱",
+    errPrice: "請輸入有效價格",
+    errAddonDup: "此加購名稱已存在",
+    errBaseName: "請輸入款式名稱",
+    errBaseDup: "此款式名稱已存在",
+
+    summaryTitle: "消費明細",
+    summaryThanks: "感謝您的預約，祝您有美好的一天！",
+    summaryDiscount: "優惠折抵",
+    summaryTotal: "總計",
+    lineProduct: "產品加購",
+    lineOther: "其他服務",
+
+    recordFallback: "其他服務",
+
+    csvHeader: "日期時間,施作項目,總金額",
+    csvFilename: "美甲營收報表_${month}.csv",
+
+    greetingMorning: "早安！${name} ，願今天預約也滿滿！",
+    greetingAfternoon: "午安！${name} ，今天也要美美開工囉～",
+    greetingNight: "晚安！${name}，忙碌中也別忘了好好休息、吃飯喔！",
+  },
+  "zh-CN": {
+    appTitle: "美甲算算 NailCalc",
+    languageLabel: "界面语言",
+    languageHint: "默认会跟随你的系统语言；你也可以在这里手动覆盖并记住。",
+    language_zhTW: "繁体中文",
+    language_zhCN: "简体中文",
+    language_en: "English",
+
+    studioNameLabel: "工作室名称 Studio Name",
+    studioNameHint: "※ 名称将显示在消费明细抬头",
+
+    pricingTitle: "价格设置",
+    pricingLabel: "Pricing",
+
+    sectionRemovalTitle: "卸甲服务",
+    sectionRemovalLabel: "Removal",
+    sectionBaseTitle: "款式基础",
+    sectionBaseLabel: "Base Style",
+    sectionAddonsTitle: "加购造型",
+    sectionAddonsLabel: "Add-ons",
+    sectionSpaTitle: "护理保养",
+    sectionSpaLabel: "Spa & Care",
+    sectionOthersTitle: "其他加购",
+    sectionOthersLabel: "Others",
+    sectionDiscountTitle: "优惠抵扣",
+    sectionDiscountLabel: "Discount",
+
+    perFinger: "/ 指",
+
+    otherProduct: "产品加购",
+    otherService: "其他服务",
+
+    discountNone: "无",
+    discount95: "95折",
+    discount9: "9折",
+    discount85: "85折",
+    discount8: "8折",
+    discountFixed: "减 ${v}",
+    discountCustom: "自定义抵扣",
+
+    reportsTitle: "营收报表",
+    reportsLabel: "Reports",
+    monthQuery: "查询月份",
+    revenueMonth: "当月营收",
+    visitsMonth: "当月服务人次",
+    checkoutRecords: "结账记录",
+    exportCsv: "导出 CSV",
+    noRecordsMonth: "该月份暂无记录",
+
+    saveChanges: "保存修改",
+
+    bottomDiscounted: "已抵扣",
+    copy: "复制",
+    copied: "已复制",
+    checkout: "结账",
+
+    modalTitle: "消费明细",
+    back: "返回",
+    copyAndClose: "复制并关闭",
+
+    newAddonTitle: "新增加购项目",
+    addonNamePh: "加购名称",
+    addItem: "新增项目",
+    ariaDeleteAddon: "删除加购项目",
+
+    newBaseTitle: "新增款式项目",
+    baseNamePh: "款式名称",
+    ariaDeleteBase: "删除款式项目",
+
+    errAddonName: "请输入加购名称",
+    errPrice: "请输入有效价格",
+    errAddonDup: "该加购名称已存在",
+    errBaseName: "请输入款式名称",
+    errBaseDup: "该款式名称已存在",
+
+    summaryTitle: "消费明细",
+    summaryThanks: "感谢您的预约，祝您有美好的一天！",
+    summaryDiscount: "优惠抵扣",
+    summaryTotal: "总计",
+    lineProduct: "产品加购",
+    lineOther: "其他服务",
+
+    recordFallback: "其他服务",
+
+    csvHeader: "日期时间,施作项目,总金额",
+    csvFilename: "美甲营收报表_${month}.csv",
+
+    greetingMorning: "早安！${name} ，愿今天预约也满满！",
+    greetingAfternoon: "午安！${name} ，今天也要美美开工～",
+    greetingNight: "晚安！${name}，忙碌中也别忘了好好休息、吃饭喔！",
+  },
+  en: {
+    appTitle: "NailCalc",
+    languageLabel: "Language",
+    languageHint:
+      "Defaults to your system language; you can override it here and we’ll remember it.",
+    language_zhTW: "Traditional Chinese",
+    language_zhCN: "Simplified Chinese",
+    language_en: "English",
+
+    studioNameLabel: "Studio name",
+    studioNameHint: "※ This name appears at the top of receipts.",
+
+    pricingTitle: "Pricing",
+    pricingLabel: "Pricing",
+
+    sectionRemovalTitle: "Removal",
+    sectionRemovalLabel: "Removal",
+    sectionBaseTitle: "Base style",
+    sectionBaseLabel: "Base Style",
+    sectionAddonsTitle: "Add-ons",
+    sectionAddonsLabel: "Add-ons",
+    sectionSpaTitle: "Spa & care",
+    sectionSpaLabel: "Spa & Care",
+    sectionOthersTitle: "Others",
+    sectionOthersLabel: "Others",
+    sectionDiscountTitle: "Discount",
+    sectionDiscountLabel: "Discount",
+
+    perFinger: "/ nail",
+
+    otherProduct: "Product add-on",
+    otherService: "Other services",
+
+    discountNone: "None",
+    discount95: "5% off",
+    discount9: "10% off",
+    discount85: "15% off",
+    discount8: "20% off",
+    discountFixed: "-$${v}",
+    discountCustom: "Custom discount",
+
+    reportsTitle: "Reports",
+    reportsLabel: "Reports",
+    monthQuery: "Month",
+    revenueMonth: "Revenue",
+    visitsMonth: "Clients",
+    checkoutRecords: "Checkout history",
+    exportCsv: "Export CSV",
+    noRecordsMonth: "No records for this month",
+
+    saveChanges: "Save",
+
+    bottomDiscounted: "Discounted",
+    copy: "Copy",
+    copied: "Copied",
+    checkout: "Checkout",
+
+    modalTitle: "Receipt",
+    back: "Back",
+    copyAndClose: "Copy & close",
+
+    newAddonTitle: "Add add-on item",
+    addonNamePh: "Item name",
+    addItem: "Add item",
+    ariaDeleteAddon: "Delete add-on item",
+
+    newBaseTitle: "Add base style item",
+    baseNamePh: "Style name",
+    ariaDeleteBase: "Delete base style item",
+
+    errAddonName: "Please enter an item name",
+    errPrice: "Please enter a valid price",
+    errAddonDup: "This item name already exists",
+    errBaseName: "Please enter a style name",
+    errBaseDup: "This style name already exists",
+
+    summaryTitle: "Receipt",
+    summaryThanks: "Thank you for booking — have a great day!",
+    summaryDiscount: "Discount",
+    summaryTotal: "Total",
+    lineProduct: "Product add-on",
+    lineOther: "Other services",
+
+    recordFallback: "Other services",
+
+    csvHeader: "Date/time,Service items,Total",
+    csvFilename: "nail_revenue_${month}.csv",
+
+    greetingMorning: "Good morning, ${name}! Hope your bookings are full today!",
+    greetingAfternoon: "Good afternoon, ${name}! Have a great shift!",
+    greetingNight:
+      "Good evening, ${name}! Don’t forget to rest and eat well — you’ve got this!",
+  },
+};
+
+const tString = (locale, key, vars) => {
+  const table = UI_STRINGS[locale] || UI_STRINGS["zh-TW"];
+  let s = table[key] ?? UI_STRINGS["zh-TW"][key] ?? key;
+  if (vars) {
+    Object.entries(vars).forEach(([k, v]) => {
+      s = s.replaceAll(`\${${k}}`, String(v));
+    });
+  }
+  return s;
+};
+
+/** @type {Record<AppLocale, Record<string, Record<string, string>>>} */
+const PRICE_LABELS = {
+  "zh-TW": {
+    removal: {
+      "本店 / 純卸甲": "本店 / 純卸甲",
+      "本店 / 卸甲續作": "本店 / 卸甲續作",
+      "他店 / 純卸甲": "他店 / 純卸甲",
+      "他店 / 卸甲續作": "他店 / 卸甲續作",
+    },
+    base: {
+      透明建甲: "透明建甲",
+      單色: "單色",
+      跳色: "跳色",
+      法式: "法式",
+      貓眼: "貓眼",
+      漸層: "漸層",
+    },
+    addons: {
+      延甲: "延甲",
+      水晶: "水晶",
+      手繪: "手繪",
+      裝飾: "裝飾",
+    },
+    spa: {
+      手部基礎: "手部基礎",
+      手部深層: "手部深層",
+      足部基礎: "足部基礎",
+      足部深層: "足部深層",
+    },
+  },
+  "zh-CN": {
+    removal: {
+      "本店 / 純卸甲": "本店 / 纯卸甲",
+      "本店 / 卸甲續作": "本店 / 卸甲续作",
+      "他店 / 純卸甲": "他店 / 纯卸甲",
+      "他店 / 卸甲續作": "他店 / 卸甲续作",
+    },
+    base: {
+      透明建甲: "透明延长",
+      單色: "单色",
+      跳色: "跳色",
+      法式: "法式",
+      貓眼: "猫眼",
+      漸層: "渐变",
+    },
+    addons: {
+      延甲: "延长",
+      水晶: "水晶",
+      手繪: "手绘",
+      裝飾: "装饰",
+    },
+    spa: {
+      手部基礎: "手部基础",
+      手部深層: "手部深层",
+      足部基礎: "足部基础",
+      足部深層: "足部深层",
+    },
+  },
+  en: {
+    removal: {
+      "本店 / 純卸甲": "In-salon / removal only",
+      "本店 / 卸甲續作": "In-salon / removal + redo",
+      "他店 / 純卸甲": "Other salon / removal only",
+      "他店 / 卸甲續作": "Other salon / removal + redo",
+    },
+    base: {
+      透明建甲: "Clear extension",
+      單色: "Solid color",
+      跳色: "Accent color",
+      法式: "French",
+      貓眼: "Cat eye",
+      漸層: "Ombre",
+    },
+    addons: {
+      延甲: "Extension",
+      水晶: "Crystal",
+      手繪: "Hand-painted",
+      裝飾: "Decor",
+    },
+    spa: {
+      手部基礎: "Hands basic",
+      手部深層: "Hands deep",
+      足部基礎: "Feet basic",
+      足部深層: "Feet deep",
+    },
+  },
+};
+
+const priceItemLabel = (locale, cat, key) => {
+  const map = PRICE_LABELS[locale]?.[cat]?.[key];
+  if (map) return map;
+  return key;
+};
+
 const DEFAULT_ADDONS = { 延甲: 50, 水晶: 100, 手繪: 50, 裝飾: 30 };
 const CUSTOM_ADDONS_STORAGE_KEY = "nail_custom_addons";
 const DEFAULT_BASE_STYLES = {
@@ -408,6 +836,7 @@ const getStoredRecords = () => {
 
 const App = () => {
   // 狀態管理
+  const [locale, setLocale] = useState(() => getInitialLocale());
   const [studioName, setStudioName] = useState(
     () => localStorage.getItem("studioName") || "My Studio"
   );
@@ -422,11 +851,29 @@ const App = () => {
   const [baseFormError, setBaseFormError] = useState("");
   const [records, setRecords] = useState(() => getStoredRecords());
 
+  const t = useMemo(() => {
+    return (key, vars) => tString(locale, key, vars);
+  }, [locale]);
+
   // 報表專用月份選擇狀態
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
   });
+
+  // 同步介面語言
+  useEffect(() => {
+    try {
+      localStorage.setItem(LOCALE_STORAGE_KEY, locale);
+    } catch {
+      // ignore
+    }
+  }, [locale]);
+
+  useEffect(() => {
+    setAddonFormError("");
+    setBaseFormError("");
+  }, [locale]);
 
   // 同步工作室名稱
   useEffect(() => localStorage.setItem("studioName", studioName), [studioName]);
@@ -517,30 +964,34 @@ const App = () => {
   const calculateTotal = () => Math.max(0, getSubtotal() - getDiscountAmount());
 
   const generateSummaryText = () => {
-    let text = `🤍 ${studioName} 消費明細 🤍\n----------------------\n`;
+    let text = `🤍 ${studioName} ${t("summaryTitle")} 🤍\n----------------------\n`;
     if (selections.removal)
-      text += `▫️ ${selections.removal}: $${
+      text += `▫️ ${priceItemLabel(locale, "removal", selections.removal)}: $${
         prices.removal[selections.removal]
       }\n`;
     if (selections.base)
-      text += `▫️ ${selections.base}: $${prices.base[selections.base]}\n`;
+      text += `▫️ ${priceItemLabel(locale, "base", selections.base)}: $${
+        prices.base[selections.base]
+      }\n`;
     Object.keys(selections.addons).forEach((key) => {
       if (selections.addons[key] > 0)
-        text += `▫️ ${key} x${selections.addons[key]}: $${
-          prices.addons[key] * selections.addons[key]
-        }\n`;
+        text += `▫️ ${priceItemLabel(locale, "addons", key)} x${
+          selections.addons[key]
+        }: $${prices.addons[key] * selections.addons[key]}\n`;
     });
-    selections.spa.forEach(
-      (item) => (text += `▫️ ${item}: $${prices.spa[item]}\n`)
-    );
+    selections.spa.forEach((item) => {
+      text += `▫️ ${priceItemLabel(locale, "spa", item)}: $${prices.spa[item]}\n`;
+    });
     if (selections.customProduct > 0)
-      text += `▫️ 產品加購: $${selections.customProduct}\n`;
+      text += `▫️ ${t("lineProduct")}: $${selections.customProduct}\n`;
     if (selections.customOther > 0)
-      text += `▫️ 其他服務: $${selections.customOther}\n`;
+      text += `▫️ ${t("lineOther")}: $${selections.customOther}\n`;
     const discount = getDiscountAmount();
     if (discount > 0)
-      text += `----------------------\n🤍 優惠折抵: -$${discount}\n`;
-    text += `----------------------\n🤍 總計: $${calculateTotal()}\n\n 感謝您的預約，祝您有美好的一天！`;
+      text += `----------------------\n🤍 ${t("summaryDiscount")}: -$${discount}\n`;
+    text += `----------------------\n🤍 ${t("summaryTotal")}: $${calculateTotal()}\n\n ${t(
+      "summaryThanks"
+    )}`;
     return text;
   };
 
@@ -560,17 +1011,21 @@ const App = () => {
   const finalizePayment = () => {
     const total = calculateTotal();
     const itemsSummary = [
-      selections.removal,
-      selections.base,
-      ...selections.spa,
+      selections.removal
+        ? priceItemLabel(locale, "removal", selections.removal)
+        : null,
+      selections.base ? priceItemLabel(locale, "base", selections.base) : null,
+      ...selections.spa.map((item) => priceItemLabel(locale, "spa", item)),
     ]
       .filter(Boolean)
       .join(", ");
     const now = new Date();
+    const dateLocale =
+      locale === "en" ? "en-US" : locale === "zh-CN" ? "zh-CN" : "zh-TW";
     const newRecord = {
       id: Date.now(),
-      date: now.toLocaleString("zh-TW", { hour12: false }), // 例如 "2024/1/19 23:45:00"
-      items: itemsSummary || "其他服務",
+      date: now.toLocaleString(dateLocale, { hour12: false }), // 例如 "2024/1/19 23:45:00"
+      items: itemsSummary || t("recordFallback"),
       amount: total,
       // 輔助過濾欄位
       month: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
@@ -622,7 +1077,7 @@ const App = () => {
   // 營收導出 CSV (僅導出目前所選月份)
   const exportToCSV = () => {
     if (filteredRecords.length === 0) return;
-    let csvContent = "\uFEFF日期時間,施作項目,總金額\n";
+    let csvContent = `\uFEFF${t("csvHeader")}\n`;
     filteredRecords.forEach((r) => {
       csvContent += `${r.date},"${r.items}",${r.amount}\n`;
     });
@@ -630,7 +1085,7 @@ const App = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `美甲營收報表_${selectedMonth}.csv`;
+    link.download = t("csvFilename", { month: selectedMonth });
     link.click();
   };
 
@@ -654,17 +1109,17 @@ const App = () => {
     const price = Number(newAddonPrice);
 
     if (!name) {
-      setAddonFormError("請輸入加購名稱");
+      setAddonFormError(t("errAddonName"));
       return;
     }
 
     if (Number.isNaN(price) || price < 0) {
-      setAddonFormError("請輸入有效價格");
+      setAddonFormError(t("errPrice"));
       return;
     }
 
     if (prices.addons[name] !== undefined) {
-      setAddonFormError("此加購名稱已存在");
+      setAddonFormError(t("errAddonDup"));
       return;
     }
 
@@ -699,17 +1154,17 @@ const App = () => {
     const price = Number(newBasePrice);
 
     if (!name) {
-      setBaseFormError("請輸入款式名稱");
+      setBaseFormError(t("errBaseName"));
       return;
     }
 
     if (Number.isNaN(price) || price < 0) {
-      setBaseFormError("請輸入有效價格");
+      setBaseFormError(t("errPrice"));
       return;
     }
 
     if (prices.base[name] !== undefined) {
-      setBaseFormError("此款式名稱已存在");
+      setBaseFormError(t("errBaseDup"));
       return;
     }
 
@@ -754,16 +1209,16 @@ const App = () => {
     </div>
   );
 
-  const greetingText = (() => {
+  const greetingText = useMemo(() => {
     const hour = new Date().getHours();
     if (hour >= 5 && hour <= 11) {
-      return `早安！${studioName} ，願今天預約也滿滿！`;
+      return tString(locale, "greetingMorning", { name: studioName });
     }
     if (hour >= 12 && hour <= 17) {
-      return `午安！${studioName} ，今天也要美美開工囉～`;
+      return tString(locale, "greetingAfternoon", { name: studioName });
     }
-    return `晚安！${studioName}，忙碌中也別忘了好好休息、吃飯喔！`;
-  })();
+    return tString(locale, "greetingNight", { name: studioName });
+  }, [locale, studioName]);
 
   return (
     <div
@@ -797,7 +1252,7 @@ const App = () => {
             />
           </div>
           <h1 className="text-xl font-bold text-[#5F4636]">
-            美甲算算 NailCalc
+            {t("appTitle")}
           </h1>
         </button>
 
@@ -830,7 +1285,10 @@ const App = () => {
           </p>
           {/* 卸甲服務 */}
           <section>
-            <SectionHeader title="卸甲服務" label="Removal" />
+            <SectionHeader
+              title={t("sectionRemovalTitle")}
+              label={t("sectionRemovalLabel")}
+            />
             <div className="grid grid-cols-2 gap-3">
               {Object.keys(prices.removal).map((item) => (
                 <button
@@ -846,7 +1304,7 @@ const App = () => {
                     style={{ fontSize: theme.fontSize.btnMain }}
                     className="font-bold"
                   >
-                    {item}
+                    {priceItemLabel(locale, "removal", item)}
                   </div>
                   <div
                     style={{ fontSize: theme.fontSize.btnSub }}
@@ -861,7 +1319,10 @@ const App = () => {
 
           {/* 款式基礎 */}
           <section>
-            <SectionHeader title="款式基礎" label="Base Style" />
+            <SectionHeader
+              title={t("sectionBaseTitle")}
+              label={t("sectionBaseLabel")}
+            />
             <div className="grid grid-cols-3 gap-2">
               {Object.keys(prices.base).map((item) => (
                 <button
@@ -877,7 +1338,7 @@ const App = () => {
                     style={{ fontSize: theme.fontSize.baseBtnMain }}
                     className="font-bold"
                   >
-                    {item}
+                    {priceItemLabel(locale, "base", item)}
                   </div>
                   <div
                     style={{ fontSize: theme.fontSize.baseBtnSub }}
@@ -892,7 +1353,10 @@ const App = () => {
 
           {/* 加購造型 */}
           <section>
-            <SectionHeader title="加購造型" label="Add-ons" />
+            <SectionHeader
+              title={t("sectionAddonsTitle")}
+              label={t("sectionAddonsLabel")}
+            />
             <div className="space-y-3">
               {Object.keys(prices.addons).map((item) => (
                 <div
@@ -904,13 +1368,13 @@ const App = () => {
                       style={{ fontSize: theme.fontSize.btnMain }}
                       className="font-bold"
                     >
-                      {item}
+                      {priceItemLabel(locale, "addons", item)}
                     </div>
                     <div
                       style={{ fontSize: theme.fontSize.btnSub }}
                       className="text-stone-400"
                     >
-                      ${prices.addons[item]} / 指
+                      ${prices.addons[item]} {t("perFinger")}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -965,7 +1429,10 @@ const App = () => {
 
           {/* 護理保養 */}
           <section>
-            <SectionHeader title="護理保養" label="Spa & Care" />
+            <SectionHeader
+              title={t("sectionSpaTitle")}
+              label={t("sectionSpaLabel")}
+            />
             <div className="grid grid-cols-2 gap-3">
               {Object.keys(prices.spa).map((item) => (
                 <button
@@ -981,7 +1448,7 @@ const App = () => {
                     style={{ fontSize: theme.fontSize.btnMain }}
                     className="font-bold"
                   >
-                    {item}
+                    {priceItemLabel(locale, "spa", item)}
                   </div>
                   <div
                     style={{ fontSize: theme.fontSize.btnMain }}
@@ -996,7 +1463,10 @@ const App = () => {
 
           {/* 其他加購 */}
           <section>
-            <SectionHeader title="其他加購" label="Others" />
+            <SectionHeader
+              title={t("sectionOthersTitle")}
+              label={t("sectionOthersLabel")}
+            />
             <div className="space-y-3">
               <div className="bg-white p-4 rounded-2xl border border-stone-200 flex justify-between items-center">
                 <div className="flex items-center gap-3">
@@ -1007,7 +1477,7 @@ const App = () => {
                     style={{ fontSize: theme.fontSize.btnMain }}
                     className="font-bold"
                   >
-                    產品加購
+                    {t("otherProduct")}
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
@@ -1035,7 +1505,7 @@ const App = () => {
                     style={{ fontSize: theme.fontSize.btnMain }}
                     className="font-bold"
                   >
-                    其他服務
+                    {t("otherService")}
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
@@ -1059,18 +1529,21 @@ const App = () => {
 
           {/* 優惠折抵 */}
           <section className="mb-8">
-            <SectionHeader title="優惠折抵" label="Discount" />
+            <SectionHeader
+              title={t("sectionDiscountTitle")}
+              label={t("sectionDiscountLabel")}
+            />
             <div className="bg-white rounded-[1.25rem] p-5 border border-dashed border-[#9F7D6B] space-y-4 shadow-sm">
               <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
                 {[
-                  { l: "無", t: "none", v: 0 },
-                  { l: "95折", t: "percent", v: 0.95 },
-                  { l: "9折", t: "percent", v: 0.9 },
-                  { l: "85折", t: "percent", v: 0.85 },
-                  { l: "8折", t: "percent", v: 0.8 },
+                  { k: "none", l: t("discountNone"), t: "none", v: 0 },
+                  { k: "p95", l: t("discount95"), t: "percent", v: 0.95 },
+                  { k: "p9", l: t("discount9"), t: "percent", v: 0.9 },
+                  { k: "p85", l: t("discount85"), t: "percent", v: 0.85 },
+                  { k: "p8", l: t("discount8"), t: "percent", v: 0.8 },
                 ].map((d) => (
                   <button
-                    key={d.l}
+                    key={d.k}
                     onClick={() =>
                       setSelections((p) => ({
                         ...p,
@@ -1107,14 +1580,14 @@ const App = () => {
                         : "border-stone-200 text-stone-400"
                     }`}
                   >
-                    折 ${v}
+                    {t("discountFixed", { v })}
                   </button>
                 ))}
               </div>
               <div className="flex items-center justify-between border-t border-stone-100 pt-4">
                 <div className="flex items-center gap-2 text-stone-400">
                   <Icon name="tag" size={16} />{" "}
-                  <span className="text-xs">自定義折抵</span>
+                  <span className="text-xs">{t("discountCustom")}</span>
                 </div>
                 <div className="flex items-center gap-1">
                   <span className="text-[#9F7D6B] font-bold text-xs">-$</span>
@@ -1146,7 +1619,7 @@ const App = () => {
       {/* 新增與優化：營收報表頁面 (含月份切換) */}
       {view === "reports" && (
         <div className="p-6 max-w-md mx-auto">
-          <SectionHeader title="營收報表" label="Reports" />
+          <SectionHeader title={t("reportsTitle")} label={t("reportsLabel")} />
 
           {/* 月份切換控制項 */}
           <div className="flex items-center justify-between bg-white p-3 rounded-2xl border border-stone-100 mb-6 shadow-sm">
@@ -1158,7 +1631,7 @@ const App = () => {
             </button>
             <div className="flex flex-col items-center">
               <span className="text-[12px] text-stone-400 font-bold uppercase tracking-widest leading-none mb-1">
-                查詢月份
+                {t("monthQuery")}
               </span>
               <span className="text-lg font-black text-[#9F7D6B]">
                 {selectedMonth.replace("-", " / ")}
@@ -1175,18 +1648,24 @@ const App = () => {
           <div className="grid grid-cols-2 gap-4 mb-8">
             <div className="bg-white p-5 rounded-3xl shadow-sm border border-stone-100">
               <p className="text-center text-[12px] text-stone-400 font-bold uppercase mb-1">
-                當月營收
+                {t("revenueMonth")}
               </p>
               <p className="text-center text-2xl font-black text-[#9F7D6B]">
                 $
                 {filteredRecords
                   .reduce((acc, r) => acc + r.amount, 0)
-                  .toLocaleString()}
+                  .toLocaleString(
+                    locale === "en"
+                      ? "en-US"
+                      : locale === "zh-CN"
+                        ? "zh-CN"
+                        : "zh-TW"
+                  )}
               </p>
             </div>
             <div className="bg-white p-5 rounded-3xl shadow-sm border border-stone-100">
               <p className="text-center text-[12px] text-stone-400 font-bold uppercase mb-1">
-                當月服務人次
+                {t("visitsMonth")}
               </p>
               <p className="text-center text-2xl font-black text-[#9F7D6B]">
                 {filteredRecords.length}
@@ -1199,20 +1678,20 @@ const App = () => {
               className="font-bold"
               style={{ fontSize: theme.fontSize.sectionTitle }}
             >
-              結帳紀錄
+              {t("checkoutRecords")}
             </h3>
             <button
               onClick={exportToCSV}
               className="text-[#9F7D6B] text-xs font-bold flex items-center gap-1"
             >
-              <Icon name="download" size={14} /> 匯出 CSV
+              <Icon name="download" size={14} /> {t("exportCsv")}
             </button>
           </div>
 
           <div className="space-y-3">
             {filteredRecords.length === 0 ? (
               <div className="text-center py-10 text-stone-300 text-sm italic">
-                該月份尚無紀錄
+                {t("noRecordsMonth")}
               </div>
             ) : (
               filteredRecords.map((r) => (
@@ -1247,7 +1726,7 @@ const App = () => {
         <div className="p-6 max-w-md mx-auto">
           <div className="mb-10 p-6 bg-white rounded-3xl border border-stone-200 shadow-sm relative overflow-hidden">
             <label className="text-[10px] font-bold text-stone-400 mb-2 block uppercase tracking-widest">
-              工作室名稱 Studio Name
+              {t("studioNameLabel")}
             </label>
             <input
               type="text"
@@ -1257,13 +1736,32 @@ const App = () => {
               className="w-full text-xl font-bold text-[#9F7D6B] bg-transparent outline-none border-b-2 border-stone-100 focus:border-[#9F7D6B] pb-2"
             />
             <p className="text-[10px] text-stone-300 mt-3 font-medium">
-              ※ 名稱將顯示於消費明細抬頭
+              {t("studioNameHint")}
             </p>
           </div>
+
+          <div className="mb-10 p-6 bg-white rounded-3xl border border-stone-200 shadow-sm relative overflow-hidden">
+            <label className="text-[10px] font-bold text-stone-400 mb-2 block uppercase tracking-widest">
+              {t("languageLabel")}
+            </label>
+            <select
+              value={locale}
+              onChange={(e) => setLocale(/** @type {AppLocale} */ (e.target.value))}
+              className="w-full text-sm font-bold bg-stone-50 rounded-2xl px-3 py-3 text-[#5F4636] outline-none border border-stone-100 focus:border-[#9F7D6B]"
+            >
+              <option value="zh-TW">{t("language_zhTW")}</option>
+              <option value="zh-CN">{t("language_zhCN")}</option>
+              <option value="en">{t("language_en")}</option>
+            </select>
+            <p className="text-[10px] text-stone-300 mt-3 font-medium leading-relaxed">
+              {t("languageHint")}
+            </p>
+          </div>
+
           <h3 className="text-base font-bold mb-3 flex items-baseline">
-            價格設定
+            {t("pricingTitle")}
             <span className="ml-auto text-[10px] uppercase font-bold text-stone-400 tracking-widest">
-              Pricing
+              {t("pricingLabel")}
             </span>
           </h3>
 
@@ -1274,10 +1772,10 @@ const App = () => {
             >
               <h4 className="text-[10px] font-bold text-stone-400 mb-2 uppercase">
                 {{
-                  removal: "Removal",
-                  base: "Base Style",
-                  addons: "Add-ons",
-                  spa: "Spa & Care",
+                  removal: t("sectionRemovalLabel"),
+                  base: t("sectionBaseLabel"),
+                  addons: t("sectionAddonsLabel"),
+                  spa: t("sectionSpaLabel"),
                 }[cat] || cat}
               </h4>
 
@@ -1286,7 +1784,9 @@ const App = () => {
                   key={name}
                   className="flex justify-between items-baseline py-2 border-b border-stone-100"
                 >
-                  <span className="text-sm font-bold flex-1 pr-2">{name}</span>
+                  <span className="text-sm font-bold flex-1 pr-2">
+                    {priceItemLabel(locale, cat, name)}
+                  </span>
                   <div className="flex items-center gap-2">
                     <input
                       type="number"
@@ -1305,7 +1805,7 @@ const App = () => {
                         type="button"
                         onClick={() => removeCustomAddon(name)}
                         className="w-8 h-8 rounded-xl border border-stone-200 text-stone-400 hover:text-rose-500 hover:border-rose-200 flex items-center justify-center transition-colors"
-                        aria-label={`刪除加購 ${name}`}
+                        aria-label={`${t("ariaDeleteAddon")}: ${name}`}
                       >
                         <Icon name="trash" size={14} />
                       </button>
@@ -1316,7 +1816,7 @@ const App = () => {
                         type="button"
                         onClick={() => removeCustomBaseStyle(name)}
                         className="w-8 h-8 rounded-xl border border-stone-200 text-stone-400 hover:text-rose-500 hover:border-rose-200 flex items-center justify-center transition-colors"
-                        aria-label={`刪除款式 ${name}`}
+                        aria-label={`${t("ariaDeleteBase")}: ${name}`}
                       >
                         <Icon name="trash" size={14} />
                       </button>
@@ -1328,7 +1828,7 @@ const App = () => {
               {cat === "addons" && (
                 <div className="mt-4 pt-4 border-t border-dashed border-stone-200">
                   <p className="text-[10px] font-bold text-stone-400 mb-3 uppercase tracking-widest">
-                    新增加購項目
+                    {t("newAddonTitle")}
                   </p>
                   <div className="flex gap-2 mb-2">
                     <input
@@ -1338,7 +1838,7 @@ const App = () => {
                         setNewAddonName(e.target.value);
                         if (addonFormError) setAddonFormError("");
                       }}
-                      placeholder="加購名稱"
+                      placeholder={t("addonNamePh")}
                       className="flex-1 text-sm font-bold bg-stone-50 rounded-2xl px-3 py-2 text-[#5F4636] outline-none border border-stone-100 focus:border-[#9F7D6B]"
                     />
                     <div className="w-24 flex items-center gap-1 min-w-0">
@@ -1367,7 +1867,7 @@ const App = () => {
                     onClick={addCustomAddon}
                     className="w-full py-2.5 rounded-2xl bg-[#9F7D6B] text-white text-sm font-bold shadow-sm"
                   >
-                    新增項目
+                    {t("addItem")}
                   </button>
                 </div>
               )}
@@ -1375,7 +1875,7 @@ const App = () => {
               {cat === "base" && (
                 <div className="mt-4 pt-4 border-t border-dashed border-stone-200">
                   <p className="text-[10px] font-bold text-stone-400 mb-3 uppercase tracking-widest">
-                    新增款式項目
+                    {t("newBaseTitle")}
                   </p>
                   <div className="flex gap-2 mb-2">
                     <input
@@ -1385,7 +1885,7 @@ const App = () => {
                         setNewBaseName(e.target.value);
                         if (baseFormError) setBaseFormError("");
                       }}
-                      placeholder="款式名稱"
+                      placeholder={t("baseNamePh")}
                       className="flex-1 text-sm font-bold bg-stone-50 rounded-2xl px-3 py-2 text-[#5F4636] outline-none border border-stone-100 focus:border-[#9F7D6B]"
                     />
                     <div className="w-24 flex items-center gap-1 min-w-0">
@@ -1414,7 +1914,7 @@ const App = () => {
                     onClick={addCustomBaseStyle}
                     className="w-full py-2.5 rounded-2xl bg-[#9F7D6B] text-white text-sm font-bold shadow-sm"
                   >
-                    新增項目
+                    {t("addItem")}
                   </button>
                 </div>
               )}
@@ -1424,7 +1924,7 @@ const App = () => {
             onClick={() => setView("calculator")}
             className="w-full p-4 bg-[#9F7D6B] text-white rounded-[1.25rem] font-bold shadow-lg"
           >
-            儲存修改
+            {t("saveChanges")}
           </button>
         </div>
       )}
@@ -1444,13 +1944,15 @@ const App = () => {
             <div>
               {getDiscountAmount() > 0 && (
                 <p className="text-xs text-[#9F7D6B] font-bold mb-1">
-                  已折抵 -${getDiscountAmount()}
+                  {t("bottomDiscounted")} -${getDiscountAmount()}
                 </p>
               )}
               <div className="flex items-baseline">
                 <span className="text-[#9F7D6B] font-bold text-xl">$</span>
                 <span className="text-4xl font-black text-[#9F7D6B] leading-none">
-                  {calculateTotal().toLocaleString()}
+                  {calculateTotal().toLocaleString(
+                    locale === "en" ? "en-US" : locale === "zh-CN" ? "zh-CN" : "zh-TW"
+                  )}
                 </span>
               </div>
             </div>
@@ -1465,14 +1967,14 @@ const App = () => {
                 }`}
               >
                 <Icon name={copied ? "check" : "copy"} size={16} />{" "}
-                {copied ? "已複製" : "複製"}
+                {copied ? t("copied") : t("copy")}
               </button>
 
               <button
                 onClick={() => setShowModal(true)}
                 className="bg-[#9F7D6B] text-white px-6 py-3 rounded-2xl font-bold"
               >
-                結帳
+                {t("checkout")}
               </button>
             </div>
           </div>
@@ -1483,7 +1985,7 @@ const App = () => {
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-[2rem] w-full max-w-sm p-6 shadow-2xl">
-            <h3 className="text-center font-bold mb-4">消費明細</h3>
+            <h3 className="text-center font-bold mb-4">{t("modalTitle")}</h3>
             <div className="bg-stone-50 p-4 rounded-2xl mb-4 max-h-60 overflow-y-auto">
               <pre className="whitespace-pre-wrap text-xs leading-relaxed font-mono">
                 {generateSummaryText()}
@@ -1494,13 +1996,13 @@ const App = () => {
                 onClick={() => setShowModal(false)}
                 className="flex-1 py-3 rounded-xl bg-stone-100 font-bold text-stone-500"
               >
-                返回
+                {t("back")}
               </button>
               <button
                 onClick={finalizePayment}
                 className="flex-[2] bg-[#9F7D6B] text-white py-3 px-6 rounded-xl font-bold"
               >
-                複製並關閉
+                {t("copyAndClose")}
               </button>
             </div>
           </div>
