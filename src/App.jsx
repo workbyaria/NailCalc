@@ -757,10 +757,10 @@ const App = () => {
   const greetingText = (() => {
     const hour = new Date().getHours();
     if (hour >= 5 && hour <= 11) {
-      return `05:00–11:59　早安！${studioName} ，願今天預約也滿滿！`;
+      return `早安！${studioName} ，願今天預約也滿滿！`;
     }
     if (hour >= 12 && hour <= 17) {
-      return `12:00–17:59　午安！${studioName} ，今天也要美美開工囉～`;
+      return `午安！${studioName} ，今天也要美美開工囉～`;
     }
     return `晚安！${studioName}，忙碌中也別忘了好好休息、吃飯喔！`;
   })();
