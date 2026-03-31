@@ -475,7 +475,7 @@ const UI_STRINGS = {
     csvFilename: "美甲營收報表_${month}.csv",
 
     greetingMorning: "早安！${name} ，願今天預約也滿滿！",
-    greetingAfternoon: "午安！${name} ，今天也要美美開工囉～",
+    greetingAfternoon: "午安！${name} ，今天也要開開心心工作唷！",
     greetingNight: "晚安！${name}，忙碌中也別忘了好好休息、吃飯喔！",
   },
   "zh-CN": {
@@ -573,7 +573,7 @@ const UI_STRINGS = {
     appTitle: "NailCalc",
     languageLabel: "Language",
     languageHint:
-      "Defaults to your system language; you can override it here and we’ll remember it.",
+      "Defaults to your system language.",
     language_zhTW: "Traditional Chinese",
     language_zhCN: "Simplified Chinese",
     language_en: "English",
@@ -586,7 +586,7 @@ const UI_STRINGS = {
 
     sectionRemovalTitle: "Removal",
     sectionRemovalLabel: "Removal",
-    sectionBaseTitle: "Base style",
+    sectionBaseTitle: "Base Style",
     sectionBaseLabel: "Base Style",
     sectionAddonsTitle: "Add-ons",
     sectionAddonsLabel: "Add-ons",
@@ -646,8 +646,8 @@ const UI_STRINGS = {
     errBaseDup: "This style name already exists",
 
     summaryTitle: "Receipt",
-    summaryThanks: "Thank you for booking — have a great day!",
-    summaryDiscount: "Discount",
+    summaryThanks: "Thank you for booking, have a great day!",
+    summaryDiscount: "Discounts",
     summaryTotal: "Total",
     lineProduct: "Product add-on",
     lineOther: "Other services",
@@ -735,10 +735,10 @@ const PRICE_LABELS = {
   },
   en: {
     removal: {
-      "本店 / 純卸甲": "In-salon removal only",
-      "本店 / 卸甲續作": "In-salon removal + new set",
-      "他店 / 純卸甲": "Removal from other salon",
-      "他店 / 卸甲續作": "Removal from other salon + new set",
+      "本店 / 純卸甲": "Soak-off removal only",
+      "本店 / 卸甲續作": "Soak-off removal + new set",
+      "他店 / 純卸甲": "Foreign removal",
+      "他店 / 卸甲續作": "Foreign removal + new set",
     },
     base: {
       透明建甲: "Clear Builder Gel",
@@ -749,10 +749,10 @@ const PRICE_LABELS = {
       漸層: "Ombre",
     },
     addons: {
-      延甲: "Nail extension",
-      水晶: "Crystals",
-      手繪: "Hand-painted design",
-      裝飾: "Decor",
+      延甲: "Nail Extensions",
+      水晶: "Builder Gel",
+      手繪: "Hand-painted Designs",
+      裝飾: "Nail Art",
     },
     spa: {
       手部基礎: "Basic Manicure",
