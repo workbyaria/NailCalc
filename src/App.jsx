@@ -2034,7 +2034,7 @@ const App = () => {
       )}
 
       {/* 底部資訊 */}
-      <footer className="mt-5 mb-3 max-w-lg mx-auto px-5 text-center pt-4">
+      <footer className="mt-5 mb-1 max-w-lg mx-auto px-5 text-center pt-4">
         <div className="text-[10px] font-medium tracking-widest text-[#5F4636]/50 flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
           <span>NailCalc</span>
           <span aria-label="copyright">©</span>
