@@ -2034,7 +2034,7 @@ const App = () => {
       )}
 
       {/* 底部資訊 */}
-      <footer className="mt-10 mb-6 max-w-lg mx-auto px-5 text-center border-t border-stone-200/70 pt-8">
+      <footer className="mt-5 mb-3 max-w-lg mx-auto px-5 text-center pt-4">
         <div className="text-[10px] font-medium tracking-widest text-[#5F4636]/50 flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
           <span>NailCalc</span>
           <span aria-label="copyright">©</span>
@@ -2051,7 +2051,7 @@ const App = () => {
         </div>
 
         <div
-          className="mt-5 flex items-center justify-center gap-5"
+          className="mt-2.5 flex items-center justify-center gap-5"
           role="group"
           aria-label="Social & contact"
         >
