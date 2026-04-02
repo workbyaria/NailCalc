@@ -2034,38 +2034,42 @@ const App = () => {
       )}
 
       {/* 底部資訊 */}
-      <footer className="mt-8 mb-4 text-center pt-6 text-[#5F4636]/40">
-        <div className="text-[10px] font-medium tracking-widest flex items-center justify-center gap-2">
+      <footer className="mt-10 mb-6 max-w-lg mx-auto px-5 text-center border-t border-stone-200/70 pt-8">
+        <div className="text-[10px] font-medium tracking-widest text-[#5F4636]/50 flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
           <span>NailCalc</span>
           <span aria-label="copyright">©</span>
           <span>{currentYear}</span>
-          <span>•</span>
+          <span className="text-[#5F4636]/35">•</span>
           <a
             href="https://friendlycatgroup.com"
             target="_blank"
             rel="noreferrer"
-            className="underline underline-offset-2 decoration-current hover:text-[#5F4636] transition-colors"
+            className="text-[#5F4636]/70 underline underline-offset-[3px] decoration-[#5F4636]/35 hover:text-[#5F4636] hover:decoration-[#5F4636]/60 transition-colors"
           >
             {developerName}
           </a>
         </div>
 
-        <div className="mt-3 flex items-center justify-center gap-2">
+        <div
+          className="mt-5 flex items-center justify-center gap-5"
+          role="group"
+          aria-label="Social & contact"
+        >
           <a
             href="https://instagram.com/friendlycatgroup"
             target="_blank"
             rel="noreferrer"
             aria-label="Instagram: @friendlycatgroup"
-            className="inline-flex text-[#5F4636]/40 hover:text-[#5F4636] transition-colors"
+            className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] -m-1 text-[#9F7D6B] hover:text-[#7d634f] active:scale-95 transition-[color,transform] duration-200"
           >
-            <Icon name="instagram" size={18} />
+            <Icon name="instagram" size={22} />
           </a>
           <a
             href="mailto:friendlycatgroup@gmail.com"
             aria-label="Email: friendlycatgroup@gmail.com"
-            className="inline-flex text-[#5F4636]/40 hover:text-[#5F4636] transition-colors"
+            className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] -m-1 text-[#9F7D6B] hover:text-[#7d634f] active:scale-95 transition-[color,transform] duration-200"
           >
-            <Icon name="mail" size={18} />
+            <Icon name="mail" size={22} />
           </a>
         </div>
       </footer>
