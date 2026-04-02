@@ -2031,7 +2031,7 @@ const App = () => {
       )}
 
       {/* 底部資訊 */}
-      <footer className="mt-8 mb-4 text-center pt-6 opacity-40">
+      <footer className="mt-8 mb-4 text-center pt-6 text-[#5F4636]/40">
         <div className="text-[10px] font-medium tracking-widest flex items-center justify-center gap-2">
           <span>NailCalc</span>
           <span aria-label="copyright">©</span>
@@ -2041,28 +2041,28 @@ const App = () => {
             href="https://friendlycatgroup.com"
             target="_blank"
             rel="noreferrer"
-            className="hover:text-[#9F7D6B] transition-colors"
+            className="underline underline-offset-2 decoration-current hover:text-[#5F4636] transition-colors"
           >
             {developerName}
           </a>
         </div>
 
-        <div className="mt-3 flex items-center justify-center gap-6">
+        <div className="mt-3 flex items-center justify-center gap-2">
           <a
             href="https://instagram.com/friendlycatgroup"
             target="_blank"
             rel="noreferrer"
             aria-label="Instagram: @friendlycatgroup"
-            className="w-8 h-8 rounded-xl border border-stone-200 text-stone-400 hover:text-[#9F7D6B] hover:border-[#9F7D6B] flex items-center justify-center transition-colors"
+            className="inline-flex text-[#5F4636]/40 hover:text-[#5F4636] transition-colors"
           >
-            <Icon name="instagram" size={16} />
+            <Icon name="instagram" size={18} />
           </a>
           <a
             href="mailto:friendlycatgroup@gmail.com"
             aria-label="Email: friendlycatgroup@gmail.com"
-            className="w-8 h-8 rounded-xl border border-stone-200 text-stone-400 hover:text-[#9F7D6B] hover:border-[#9F7D6B] flex items-center justify-center transition-colors"
+            className="inline-flex text-[#5F4636]/40 hover:text-[#5F4636] transition-colors"
           >
-            <Icon name="mail" size={16} />
+            <Icon name="mail" size={18} />
           </a>
         </div>
       </footer>
