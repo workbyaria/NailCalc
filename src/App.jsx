@@ -426,6 +426,9 @@ const UI_STRINGS = {
     discount8: "8折",
     discountFixed: "折 ${v}",
     discountCustom: "自定義折抵",
+    discountPresetTitle: "優惠折抵",
+    discountPresetPercentLabel: "折扣百分比",
+    discountPresetFixedLabel: "固定折抵金額",
 
     reportsTitle: "營收報表",
     reportsLabel: "Reports",
@@ -442,6 +445,36 @@ const UI_STRINGS = {
     copy: "複製",
     copied: "已複製",
     checkout: "結帳",
+    customerTab: "客戶",
+    customerPageTitle: "客戶管理",
+    customerLabel: "選擇客戶",
+    customerOptional: "可跳過，之後可補",
+    customerSearchPh: "搜尋姓名、IG 或電話",
+    noCustomer: "未指定客戶",
+    manageCustomers: "管理客戶",
+    customerName: "名字",
+    customerPhone: "電話",
+    customerIg: "IG",
+    customerNote: "客戶備註",
+    customerVisitNote: "備註",
+    customerVisitNotePh: "例如：特殊設計、使用色號、延甲長度",
+    addCustomer: "新增客戶",
+    customerRequired: "請先輸入客戶名字",
+    customerTotalSpent: "總消費",
+    customerVisits: "來店次數",
+    customerLastVisit: "最近一次",
+    customerHistory: "歷史紀錄",
+    noCustomerData: "尚無客戶資料",
+    noCustomerHistory: "這位客戶尚無消費紀錄",
+    saveNote: "儲存備註",
+    customerCount: "客戶數",
+    sortRecent: "最近來店",
+    sortName: "姓名",
+    sortSpent: "總消費",
+    addCustomerHint: "新增客戶",
+    noSearchResult: "找不到符合的客戶",
+    deleteCustomer: "Delete",
+    confirmDeleteCustomer: "確定要刪除這位客戶嗎？已綁定的紀錄會保留，但不再連結此客戶。",
 
     modalTitle: "消費明細",
     back: "返回",
@@ -520,6 +553,9 @@ const UI_STRINGS = {
     discount8: "8折",
     discountFixed: "减 ${v}",
     discountCustom: "自定义抵扣",
+    discountPresetTitle: "优惠抵扣",
+    discountPresetPercentLabel: "折扣百分比（例如 90 会显示 9折）",
+    discountPresetFixedLabel: "固定抵扣金额",
 
     reportsTitle: "营收报表",
     reportsLabel: "Reports",
@@ -536,6 +572,36 @@ const UI_STRINGS = {
     copy: "复制",
     copied: "已复制",
     checkout: "结账",
+    customerTab: "客户",
+    customerPageTitle: "客户管理",
+    customerLabel: "选择客户",
+    customerOptional: "可跳过，之后可补",
+    customerSearchPh: "搜索姓名、IG 或电话",
+    noCustomer: "未指定客户",
+    manageCustomers: "管理客户",
+    customerName: "名字",
+    customerPhone: "电话",
+    customerIg: "IG",
+    customerNote: "客户备注",
+    customerVisitNote: "本次备注",
+    customerVisitNotePh: "例如：特殊设计、补强、折扣原因",
+    addCustomer: "新增客户",
+    customerRequired: "请先输入客户名字",
+    customerTotalSpent: "总消费",
+    customerVisits: "到店次数",
+    customerLastVisit: "最近一次",
+    customerHistory: "历史记录",
+    noCustomerData: "暂无客户资料",
+    noCustomerHistory: "该客户暂无消费记录",
+    saveNote: "保存备注",
+    customerCount: "客户数",
+    sortRecent: "最近到店",
+    sortName: "姓名",
+    sortSpent: "总消费",
+    addCustomerHint: "新增客户",
+    noSearchResult: "找不到符合的客户",
+    deleteCustomer: "Delete",
+    confirmDeleteCustomer: "确定要删除该客户吗？已绑定的记录会保留，但不再关联此客户。",
 
     modalTitle: "消费明细",
     back: "返回",
@@ -615,6 +681,9 @@ const UI_STRINGS = {
     discount8: "20% off",
     discountFixed: "-$${v}",
     discountCustom: "Custom discount",
+    discountPresetTitle: "Discount",
+    discountPresetPercentLabel: "Percent values",
+    discountPresetFixedLabel: "Fixed amount options",
 
     reportsTitle: "Reports",
     reportsLabel: "Reports",
@@ -631,6 +700,37 @@ const UI_STRINGS = {
     copy: "Copy",
     copied: "Copied",
     checkout: "Checkout",
+    customerTab: "Customers",
+    customerPageTitle: "Customer Management",
+    customerLabel: "Customer",
+    customerOptional: "Optional, add later anytime",
+    customerSearchPh: "Search by name, phone, or IG",
+    noCustomer: "No customer",
+    manageCustomers: "Manage customers",
+    customerName: "Name",
+    customerPhone: "Phone",
+    customerIg: "IG",
+    customerNote: "Customer note",
+    customerVisitNote: "Visit note",
+    customerVisitNotePh: "Ex: special design, reinforcement, discount reason",
+    addCustomer: "Add customer",
+    customerRequired: "Please enter customer name",
+    customerTotalSpent: "Total spent",
+    customerVisits: "Visits",
+    customerLastVisit: "Last visit",
+    customerHistory: "History",
+    noCustomerData: "No customers yet",
+    noCustomerHistory: "No records for this customer yet",
+    saveNote: "Save note",
+    customerCount: "Customers",
+    sortRecent: "Recent",
+    sortName: "Name",
+    sortSpent: "Spending",
+    addCustomerHint: "Add Customer",
+    noSearchResult: "No matching customers",
+    deleteCustomer: "Delete",
+    confirmDeleteCustomer:
+      "Delete this customer? Existing records will be kept but unlinked.",
 
     modalTitle: "Receipt",
     back: "Back",
@@ -681,6 +781,31 @@ const tString = (locale, key, vars) => {
     });
   }
   return s;
+};
+
+const formatZhDiscountFromPercent = (percent) => {
+  if (!Number.isFinite(percent) || percent <= 0) return "0折";
+  const zhe = percent / 10;
+  const str = Number.isInteger(zhe) ? String(zhe) : zhe.toFixed(1);
+  return `${str}折`;
+};
+
+const discountPercentLabel = (locale, percent) => {
+  if (locale === "en") {
+    const off = Math.max(0, 100 - percent);
+    return `${off}% off`;
+  }
+  return formatZhDiscountFromPercent(percent);
+};
+
+const formatShortDateFromId = (locale, id) => {
+  const ts = Number(id);
+  if (!Number.isFinite(ts) || ts <= 0) return "-";
+  const localeCode = locale === "en" ? "en-US" : locale === "zh-CN" ? "zh-CN" : "zh-TW";
+  return new Date(ts).toLocaleDateString(localeCode, {
+    month: "2-digit",
+    day: "2-digit",
+  });
 };
 
 /** @type {Record<AppLocale, Record<string, Record<string, string>>>} */
@@ -779,6 +904,8 @@ const priceItemLabel = (locale, cat, key) => {
 
 const DEFAULT_ADDONS = { 延甲: 50, 水晶: 100, 手繪: 50, 裝飾: 30 };
 const CUSTOM_ADDONS_STORAGE_KEY = "nail_custom_addons";
+const ADDON_QUICK_QTY_TARGETS = new Set(["延甲", "水晶"]);
+const ADDON_QUICK_QTY_VALUES = [3, 5, 10];
 const DEFAULT_BASE_STYLES = {
   透明建甲: 800,
   單色: 900,
@@ -788,6 +915,12 @@ const DEFAULT_BASE_STYLES = {
   漸層: 1400,
 };
 const CUSTOM_BASE_STYLES_STORAGE_KEY = "nail_custom_base_styles";
+const CUSTOMERS_STORAGE_KEY = "nail_customers";
+const DISCOUNT_PRESETS_STORAGE_KEY = "nail_discount_presets";
+const DEFAULT_DISCOUNT_PRESETS = {
+  percentValues: [95, 90, 85, 80],
+  fixedValues: [50, 100, 200],
+};
 
 const getStoredCustomAddons = () => {
   try {
@@ -842,6 +975,55 @@ const getStoredRecords = () => {
   }
 };
 
+const getStoredCustomers = () => {
+  try {
+    const raw = localStorage.getItem(CUSTOMERS_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (c) =>
+        c &&
+        typeof c === "object" &&
+        typeof c.id === "number" &&
+        typeof c.name === "string"
+    );
+  } catch {
+    return [];
+  }
+};
+
+const getStoredDiscountPresets = () => {
+  try {
+    const raw = localStorage.getItem(DISCOUNT_PRESETS_STORAGE_KEY);
+    if (!raw) return DEFAULT_DISCOUNT_PRESETS;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return DEFAULT_DISCOUNT_PRESETS;
+    const percentValues = Array.isArray(parsed.percentValues)
+      ? parsed.percentValues
+          .map((v) => Number(v))
+          .filter((v) => Number.isFinite(v) && v > 0 && v <= 100)
+      : DEFAULT_DISCOUNT_PRESETS.percentValues;
+    const fixedValues = Array.isArray(parsed.fixedValues)
+      ? parsed.fixedValues
+          .map((v) => Number(v))
+          .filter((v) => Number.isFinite(v) && v >= 0)
+      : DEFAULT_DISCOUNT_PRESETS.fixedValues;
+    return {
+      percentValues:
+        percentValues.length > 0
+          ? percentValues.slice(0, 4)
+          : DEFAULT_DISCOUNT_PRESETS.percentValues,
+      fixedValues:
+        fixedValues.length > 0
+          ? fixedValues.slice(0, 3)
+          : DEFAULT_DISCOUNT_PRESETS.fixedValues,
+    };
+  } catch {
+    return DEFAULT_DISCOUNT_PRESETS;
+  }
+};
+
 const App = () => {
   // 狀態管理
   const [locale, setLocale] = useState(() => getInitialLocale());
@@ -858,6 +1040,23 @@ const App = () => {
   const [newBasePrice, setNewBasePrice] = useState("");
   const [baseFormError, setBaseFormError] = useState("");
   const [records, setRecords] = useState(() => getStoredRecords());
+  const [customers, setCustomers] = useState(() => getStoredCustomers());
+  const [selectedCustomerId, setSelectedCustomerId] = useState(null);
+  const [customerSearch, setCustomerSearch] = useState("");
+  const [checkoutNote, setCheckoutNote] = useState("");
+  const [customerForm, setCustomerForm] = useState({
+    name: "",
+    phone: "",
+    ig: "",
+    note: "",
+  });
+  const [customerFormError, setCustomerFormError] = useState("");
+  const [activeCustomerId, setActiveCustomerId] = useState(null);
+  const [customerDirectoryQuery, setCustomerDirectoryQuery] = useState("");
+  const [customerSort, setCustomerSort] = useState("recent");
+  const [discountPresets, setDiscountPresets] = useState(() =>
+    getStoredDiscountPresets()
+  );
 
   const t = useMemo(() => {
     return (key, vars) => tString(locale, key, vars);
@@ -890,6 +1089,16 @@ const App = () => {
     () => localStorage.setItem("nail_records", JSON.stringify(records)),
     [records]
   );
+  useEffect(
+    () => localStorage.setItem(CUSTOMERS_STORAGE_KEY, JSON.stringify(customers)),
+    [customers]
+  );
+  useEffect(() => {
+    localStorage.setItem(
+      DISCOUNT_PRESETS_STORAGE_KEY,
+      JSON.stringify(discountPresets)
+    );
+  }, [discountPresets]);
 
   // 獲取當前年份
   const currentYear = new Date().getFullYear();
@@ -971,6 +1180,68 @@ const App = () => {
 
   const calculateTotal = () => Math.max(0, getSubtotal() - getDiscountAmount());
 
+  const selectedCustomer = useMemo(
+    () => customers.find((c) => c.id === selectedCustomerId) || null,
+    [customers, selectedCustomerId]
+  );
+
+  const filteredCustomers = useMemo(() => {
+    const q = customerSearch.trim().toLowerCase();
+    if (!q) return customers;
+    return customers.filter((c) => {
+      const name = String(c.name || "").toLowerCase();
+      const ig = String(c.ig || "").toLowerCase();
+      const phone = String(c.phone || "").toLowerCase();
+      return name.includes(q) || ig.includes(q) || phone.includes(q);
+    });
+  }, [customers, customerSearch]);
+
+  const customerStatsMap = useMemo(() => {
+    const map = {};
+    records.forEach((r) => {
+      if (!r.customerId) return;
+      if (!map[r.customerId]) {
+        map[r.customerId] = {
+          totalSpent: 0,
+          visits: 0,
+          lastVisit: "",
+          lastRecordId: 0,
+        };
+      }
+      map[r.customerId].totalSpent += Number(r.amount) || 0;
+      map[r.customerId].visits += 1;
+      map[r.customerId].lastVisit = r.date;
+      map[r.customerId].lastRecordId = Math.max(
+        map[r.customerId].lastRecordId,
+        Number(r.id) || 0
+      );
+    });
+    return map;
+  }, [records]);
+
+  const sortedCustomers = useMemo(() => {
+    const q = customerDirectoryQuery.trim().toLowerCase();
+    const filtered = customers.filter((c) => {
+      if (!q) return true;
+      return (
+        String(c.name || "").toLowerCase().includes(q) ||
+        String(c.ig || "").toLowerCase().includes(q) ||
+        String(c.phone || "").toLowerCase().includes(q)
+      );
+    });
+    return filtered.sort((a, b) => {
+      if (customerSort === "name") return a.name.localeCompare(b.name, "zh-Hant");
+      if (customerSort === "spent") {
+        const aSpent = customerStatsMap[a.id]?.totalSpent || 0;
+        const bSpent = customerStatsMap[b.id]?.totalSpent || 0;
+        return bSpent - aSpent;
+      }
+      const aRecent = customerStatsMap[a.id]?.lastRecordId || 0;
+      const bRecent = customerStatsMap[b.id]?.lastRecordId || 0;
+      return bRecent - aRecent;
+    });
+  }, [customerDirectoryQuery, customers, customerSort, customerStatsMap]);
+
   const generateSummaryText = () => {
     let text = `🤍 ${studioName} ${t("summaryTitle")} 🤍\n----------------------\n`;
     if (selections.removal)
@@ -997,6 +1268,9 @@ const App = () => {
     const discount = getDiscountAmount();
     if (discount > 0)
       text += `----------------------\n🤍 ${t("summaryDiscount")}: -$${discount}\n`;
+    if (checkoutNote.trim()) {
+      text += `▫️ ${t("customerVisitNote")}: ${checkoutNote.trim()}\n`;
+    }
     text += `----------------------\n🤍 ${t("summaryTotal")}: $${calculateTotal()}\n\n ${t(
       "summaryThanks"
     )}`;
@@ -1035,6 +1309,9 @@ const App = () => {
       date: now.toLocaleString(dateLocale, { hour12: false }), // 例如 "2024/1/19 23:45:00"
       items: itemsSummary || t("recordFallback"),
       amount: total,
+      customerId: selectedCustomer?.id || null,
+      customerName: selectedCustomer?.name || "",
+      visitNote: checkoutNote.trim(),
       // 輔助過濾欄位
       month: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
         2,
@@ -1044,6 +1321,7 @@ const App = () => {
     setRecords((prev) => [newRecord, ...prev]);
     copyToClipboard();
     setShowModal(false);
+    setCheckoutNote("");
     // 重置選擇
     setSelections({
       removal: null,
@@ -1200,6 +1478,71 @@ const App = () => {
     });
   };
 
+  const addCustomer = () => {
+    const name = customerForm.name.trim();
+    if (!name) {
+      setCustomerFormError(t("customerRequired"));
+      return;
+    }
+    const newCustomer = {
+      id: Date.now(),
+      name,
+      phone: customerForm.phone.trim(),
+      ig: customerForm.ig.trim().replace(/^@+/, ""),
+      note: customerForm.note.trim(),
+      createdAt: new Date().toISOString(),
+    };
+    setCustomers((prev) => [newCustomer, ...prev]);
+    setSelectedCustomerId(newCustomer.id);
+    setActiveCustomerId(newCustomer.id);
+    setCustomerForm({ name: "", phone: "", ig: "", note: "" });
+    setCustomerFormError("");
+  };
+
+  const updateCustomerField = (customerId, field, value) => {
+    setCustomers((prev) =>
+      prev.map((c) => (c.id === customerId ? { ...c, [field]: value } : c))
+    );
+  };
+
+  const updateRecordNote = (recordId, note) => {
+    setRecords((prev) =>
+      prev.map((r) => (r.id === recordId ? { ...r, visitNote: note } : r))
+    );
+  };
+
+  const deleteCustomer = (customerId) => {
+    const shouldDelete = window.confirm(t("confirmDeleteCustomer"));
+    if (!shouldDelete) return;
+
+    setCustomers((prev) => prev.filter((c) => c.id !== customerId));
+    setRecords((prev) =>
+      prev.map((r) =>
+        r.customerId === customerId ? { ...r, customerId: null } : r
+      )
+    );
+    setSelectedCustomerId((prev) => (prev === customerId ? null : prev));
+    setActiveCustomerId((prev) => (prev === customerId ? null : prev));
+  };
+
+  const updateDiscountPercentPreset = (index, value) => {
+    const nextValue = Math.max(0, Math.min(100, Number(value) || 0));
+    setDiscountPresets((prev) => {
+      const next = [...prev.percentValues];
+      next[index] = nextValue;
+      return { ...prev, percentValues: next };
+    });
+  };
+
+  const updateDiscountFixedPreset = (index, value) => {
+    const nextValue = Math.max(0, Number(value) || 0);
+    setDiscountPresets((prev) => {
+      const next = [...prev.fixedValues];
+      next[index] = nextValue;
+      return { ...prev, fixedValues: next };
+    });
+  };
+
   const SectionHeader = ({ title, label }) => (
     <div className="flex justify-between items-baseline mb-4 pr-1">
       <h2
@@ -1289,6 +1632,17 @@ const App = () => {
             <Icon name="chart" size={22} />
           </button>
           <button
+            onClick={() =>
+              setView(view === "customers" ? "calculator" : "customers")
+            }
+            className={`${
+              view === "customers" ? "text-[#9F7D6B]" : "text-stone-400"
+            }`}
+            title={t("customerTab")}
+          >
+            <Icon name="list" size={22} />
+          </button>
+          <button
             onClick={() => setView(view === "admin" ? "calculator" : "admin")}
             className={`${
               view === "admin" ? "text-[#9F7D6B]" : "text-stone-400"
@@ -1310,6 +1664,55 @@ const App = () => {
               {greetingLines.line2}
             </span>
           </p>
+          <section className="bg-white rounded-3xl border border-stone-200 p-4 shadow-sm space-y-2">
+            <div className="flex flex-col items-center justify-center gap-1 mb-1 text-center">
+              <h3 className="font-bold text-sm">{t("customerLabel")}</h3>
+              <span className="text-[10px] font-medium uppercase tracking-widest text-stone-400">
+                Customer
+              </span>
+            </div>
+            <input
+              type="text"
+              value={customerSearch}
+              onChange={(e) => setCustomerSearch(e.target.value)}
+              placeholder={t("customerSearchPh")}
+              className="w-full text-sm font-medium text-center bg-stone-50 rounded-full px-4 py-2.5 outline-none border border-stone-100 focus:border-[#9F7D6B]"
+            />
+            <div className="flex items-center justify-center">
+              <button
+                type="button"
+                onClick={() => setSelectedCustomerId(null)}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-bold border text-center ${
+                  selectedCustomerId === null
+                    ? "border-[#9F7D6B] bg-[#EBDCD3] text-[#9F7D6B]"
+                    : "border-stone-200 bg-white text-stone-500"
+                }`}
+              >
+                {t("noCustomer")}
+              </button>
+            </div>
+            {customerSearch.trim() ? (
+              <div className="grid grid-cols-2 gap-2">
+                {filteredCustomers.slice(0, 6).map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setSelectedCustomerId(c.id)}
+                    className={`px-3 py-2 rounded-xl text-left border ${
+                      selectedCustomerId === c.id
+                        ? "border-[#9F7D6B] bg-[#EBDCD3] text-[#9F7D6B]"
+                        : "border-stone-200 bg-white text-stone-500"
+                    }`}
+                  >
+                    <p className="text-xs font-bold truncate">{c.name}</p>
+                    <p className="text-[11px] opacity-80 truncate mt-0.5">
+                      {c.ig ? `@${c.ig}` : c.phone || "-"}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </section>
           {/* 卸甲服務 */}
           <section>
             <SectionHeader
@@ -1388,67 +1791,95 @@ const App = () => {
               {Object.keys(prices.addons).map((item) => (
                 <div
                   key={item}
-                  className="bg-white p-4 rounded-2xl border border-stone-200 flex justify-between items-center"
+                  className="bg-white p-4 rounded-2xl border border-stone-200"
                 >
-                  <div className="flex items-baseline gap-2">
-                    <div
-                      style={{ fontSize: theme.fontSize.btnMain }}
-                      className="font-bold"
-                    >
-                      {priceItemLabel(locale, "addons", item)}
+                  <div className="flex justify-between items-center gap-3">
+                    <div className="flex items-baseline gap-2">
+                      <div
+                        style={{ fontSize: theme.fontSize.btnMain }}
+                        className="font-bold"
+                      >
+                        {priceItemLabel(locale, "addons", item)}
+                      </div>
+                      <div
+                        style={{ fontSize: theme.fontSize.btnSub }}
+                        className="text-stone-400"
+                      >
+                        ${prices.addons[item]} {t("perFinger")}
+                      </div>
                     </div>
-                    <div
-                      style={{ fontSize: theme.fontSize.btnSub }}
-                      className="text-stone-400"
-                    >
-                      ${prices.addons[item]} {t("perFinger")}
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() =>
+                          setSelections((p) => ({
+                            ...p,
+                            addons: {
+                              ...p.addons,
+                              [item]: Math.max(0, (p.addons[item] || 0) - 1),
+                            },
+                          }))
+                        }
+                        className="w-8 h-8 rounded-lg border border-stone-200 flex items-center justify-center"
+                      >
+                        <Icon name="minus" size={14} />
+                      </button>
+                      <input
+                        type="number"
+                        value={selections.addons[item] || 0}
+                        onChange={(e) =>
+                          setSelections((p) => ({
+                            ...p,
+                            addons: {
+                              ...p.addons,
+                              [item]: parseInt(e.target.value) || 0,
+                            },
+                          }))
+                        }
+                        onFocus={(e) => e.target.select()}
+                        className="w-10 text-center font-bold text-[#9F7D6B] bg-transparent outline-none"
+                      />
+                      <button
+                        onClick={() =>
+                          setSelections((p) => ({
+                            ...p,
+                            addons: {
+                              ...p.addons,
+                              [item]: (p.addons[item] || 0) + 1,
+                            },
+                          }))
+                        }
+                        className="w-8 h-8 rounded-lg bg-[#9F7D6B] text-white flex items-center justify-center"
+                      >
+                        <Icon name="plus" size={14} />
+                      </button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() =>
-                        setSelections((p) => ({
-                          ...p,
-                          addons: {
-                            ...p.addons,
-                            [item]: Math.max(0, (p.addons[item] || 0) - 1),
-                          },
-                        }))
-                      }
-                      className="w-8 h-8 rounded-lg border border-stone-200 flex items-center justify-center"
-                    >
-                      <Icon name="minus" size={14} />
-                    </button>
-                    <input
-                      type="number"
-                      value={selections.addons[item] || 0}
-                      onChange={(e) =>
-                        setSelections((p) => ({
-                          ...p,
-                          addons: {
-                            ...p.addons,
-                            [item]: parseInt(e.target.value) || 0,
-                          },
-                        }))
-                      }
-                      onFocus={(e) => e.target.select()}
-                      className="w-10 text-center font-bold text-[#9F7D6B] bg-transparent outline-none"
-                    />
-                    <button
-                      onClick={() =>
-                        setSelections((p) => ({
-                          ...p,
-                          addons: {
-                            ...p.addons,
-                            [item]: (p.addons[item] || 0) + 1,
-                          },
-                        }))
-                      }
-                      className="w-8 h-8 rounded-lg bg-[#9F7D6B] text-white flex items-center justify-center"
-                    >
-                      <Icon name="plus" size={14} />
-                    </button>
-                  </div>
+                  {ADDON_QUICK_QTY_TARGETS.has(item) && (
+                    <div className="mt-3 w-[7.5rem] ml-auto flex items-center justify-between">
+                      {ADDON_QUICK_QTY_VALUES.map((qty) => (
+                        <button
+                          key={qty}
+                          type="button"
+                          onClick={() =>
+                            setSelections((p) => ({
+                              ...p,
+                              addons: {
+                                ...p.addons,
+                                [item]: qty,
+                              },
+                            }))
+                          }
+                          className={`w-8 h-8 rounded-lg border text-xs font-bold transition-colors ${
+                            (selections.addons[item] || 0) === qty
+                              ? "border-[#9F7D6B] bg-[#EBDCD3] text-[#9F7D6B]"
+                              : "border-stone-200 bg-white text-[#9F7D6B]"
+                          }`}
+                        >
+                          {qty}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -1564,10 +1995,12 @@ const App = () => {
               <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
                 {[
                   { k: "none", l: t("discountNone"), t: "none", v: 0 },
-                  { k: "p95", l: t("discount95"), t: "percent", v: 0.95 },
-                  { k: "p9", l: t("discount9"), t: "percent", v: 0.9 },
-                  { k: "p85", l: t("discount85"), t: "percent", v: 0.85 },
-                  { k: "p8", l: t("discount8"), t: "percent", v: 0.8 },
+                  ...discountPresets.percentValues.map((percent, idx) => ({
+                    k: `p_${idx}_${percent}`,
+                    l: discountPercentLabel(locale, percent),
+                    t: "percent",
+                    v: percent / 100,
+                  })),
                 ].map((d) => (
                   <button
                     key={d.k}
@@ -1590,7 +2023,7 @@ const App = () => {
                 ))}
               </div>
               <div className="flex gap-2">
-                {[50, 100, 200].map((v) => (
+                {discountPresets.fixedValues.map((v) => (
                   <button
                     key={v}
                     onClick={() =>
@@ -1623,7 +2056,7 @@ const App = () => {
                     className="w-16 text-right font-bold text-[#9F7D6B] bg-stone-50 rounded-lg p-1.5 focus:outline-none"
                     value={
                       selections.discountType === "fixed" &&
-                      ![50, 100, 200].includes(selections.discountVal)
+                      !discountPresets.fixedValues.includes(selections.discountVal)
                         ? selections.discountVal
                         : ""
                     }
@@ -1724,26 +2157,308 @@ const App = () => {
               filteredRecords.map((r) => (
                 <div
                   key={r.id}
-                  className="bg-white p-4 rounded-2xl border border-stone-100 flex justify-between items-center"
+                  className="bg-white p-4 rounded-2xl border border-stone-100"
                 >
-                  <div className="flex-1 min-w-0 mr-3">
-                    <p className="text-[10px] text-stone-400">{r.date}</p>
-                    <p className="text-sm font-bold truncate">{r.items}</p>
+                  <div className="flex justify-between items-start gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] text-stone-400">{r.date}</p>
+                      <p className="text-sm font-bold truncate">{r.items}</p>
+                      <p className="text-xs text-stone-400 mt-1">
+                        {t("customerLabel")}: {r.customerName || t("noCustomer")}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span className="font-black text-[#9F7D6B]">${r.amount}</span>
+                      <button
+                        onClick={() => deleteRecord(r.id)}
+                        className="text-stone-200 hover:text-red-400"
+                      >
+                        <Icon name="trash" size={16} />
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <span className="font-black text-[#9F7D6B]">
-                      ${r.amount}
-                    </span>
-                    <button
-                      onClick={() => deleteRecord(r.id)}
-                      className="text-stone-200 hover:text-red-400"
-                    >
-                      <Icon name="trash" size={16} />
-                    </button>
+                  <div className="mt-2">
+                    <textarea
+                      value={r.visitNote || ""}
+                      onChange={(e) => updateRecordNote(r.id, e.target.value)}
+                      placeholder={t("customerVisitNotePh")}
+                      className="w-full min-h-16 text-xs bg-stone-50 rounded-xl px-3 py-2 text-[#5F4636] outline-none border border-stone-100 focus:border-[#9F7D6B]"
+                    />
                   </div>
                 </div>
               ))
             )}
+          </div>
+        </div>
+      )}
+
+      {view === "customers" && (
+        <div className="p-6 max-w-md mx-auto">
+          <SectionHeader title={t("customerPageTitle")} label="CRM" />
+
+          <div className="grid grid-cols-3 gap-3 mb-5">
+            <div className="bg-white p-4 rounded-3xl shadow-sm border border-stone-100 flex flex-col justify-center">
+              <p className="text-center text-[12px] text-stone-400 font-bold uppercase mb-1">
+                {t("customerCount")}
+              </p>
+              <p className="text-center text-2xl font-black text-[#9F7D6B] leading-none">
+                {customers.length}
+              </p>
+            </div>
+            <div className="bg-white p-4 rounded-3xl shadow-sm border border-stone-100 flex flex-col justify-center">
+              <p className="text-center text-[12px] text-stone-400 font-bold uppercase mb-1">
+                {t("customerVisits")}
+              </p>
+              <p className="text-center text-2xl font-black text-[#9F7D6B] leading-none">
+                {records.filter((r) => r.customerId).length}
+              </p>
+            </div>
+            <div className="bg-white p-4 rounded-3xl shadow-sm border border-stone-100 flex flex-col justify-center">
+              <p className="text-center text-[12px] text-stone-400 font-bold uppercase mb-1">
+                {t("customerTotalSpent")}
+              </p>
+              <p className="text-center text-2xl font-black text-[#9F7D6B] leading-none">
+                $
+                {records
+                  .filter((r) => r.customerId)
+                  .reduce((acc, r) => acc + (Number(r.amount) || 0), 0)}
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-3xl border border-stone-200 p-4 shadow-sm mb-6">
+            <input
+              type="text"
+              value={customerDirectoryQuery}
+              onChange={(e) => setCustomerDirectoryQuery(e.target.value)}
+              placeholder={t("customerSearchPh")}
+              className="w-full text-sm font-medium text-center bg-stone-50 rounded-full px-4 py-2.5 text-[#5F4636] outline-none border border-stone-100 focus:border-[#9F7D6B]"
+            />
+          </div>
+
+          <div className="space-y-2 mb-6">
+            {customers.length === 0 ? (
+              <div className="text-center py-8 text-stone-300 text-sm italic">
+                {t("noCustomerData")}
+              </div>
+            ) : sortedCustomers.length === 0 ? (
+              <div className="text-center py-8 text-stone-300 text-sm italic">
+                {t("noSearchResult")}
+              </div>
+            ) : (
+              sortedCustomers.map((c) => {
+                const stats = customerStatsMap[c.id] || {
+                  totalSpent: 0,
+                  visits: 0,
+                  lastVisit: "-",
+                  lastRecordId: 0,
+                };
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() =>
+                      setActiveCustomerId((prev) => (prev === c.id ? null : c.id))
+                    }
+                    className={`w-full text-left bg-white p-4 rounded-2xl border transition-all ${
+                      activeCustomerId === c.id
+                        ? "border-[#9F7D6B] shadow-sm bg-[#FFFCFA]"
+                        : "border-stone-100 hover:border-stone-200"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-[#5F4636] truncate">{c.name}</p>
+                        <p className="text-xs text-stone-400 mt-0.5 truncate">
+                          {c.ig ? `@${c.ig}` : c.phone || "-"}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs font-black text-[#9F7D6B]">${stats.totalSpent}</p>
+                        <p className="text-[10px] text-stone-400">
+                          {stats.visits} {t("customerVisits")}
+                        </p>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })
+            )}
+          </div>
+
+          {activeCustomerId && (
+            <div className="bg-white p-5 rounded-3xl border border-stone-200 shadow-sm">
+              {(() => {
+                const customer = customers.find((c) => c.id === activeCustomerId);
+                if (!customer) return null;
+                const stats = customerStatsMap[customer.id] || {
+                  totalSpent: 0,
+                  visits: 0,
+                  lastVisit: "-",
+                  lastRecordId: 0,
+                };
+                const lastVisitLabel = formatShortDateFromId(locale, stats.lastRecordId);
+                const history = records.filter((r) => r.customerId === customer.id);
+                return (
+                  <>
+                    <div className="flex items-center justify-between gap-3 mb-3">
+                      <h3 className="text-base font-bold">{customer.name}</h3>
+                      <button
+                        type="button"
+                        onClick={() => deleteCustomer(customer.id)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-stone-200 text-[#9F7D6B] text-xs font-bold hover:bg-stone-50 transition-colors"
+                      >
+                        <Icon name="trash" size={12} />
+                        {t("deleteCustomer")}
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 mb-4 text-center">
+                      <div className="bg-stone-50 rounded-xl h-20 px-2 flex flex-col items-center justify-center">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-stone-400">
+                          {t("customerTotalSpent")}
+                        </p>
+                        <p className="text-xl font-black text-[#9F7D6B] leading-none mt-1">
+                          ${stats.totalSpent}
+                        </p>
+                      </div>
+                      <div className="bg-stone-50 rounded-xl h-20 px-2 flex flex-col items-center justify-center">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-stone-400">
+                          {t("customerVisits")}
+                        </p>
+                        <p className="text-xl font-black text-[#9F7D6B] leading-none mt-1">
+                          {stats.visits}
+                        </p>
+                      </div>
+                      <div className="bg-stone-50 rounded-xl h-20 px-2 flex flex-col items-center justify-center">
+                        <p className="text-[10px] font-bold uppercase tracking-widest text-stone-400">
+                          {t("customerLastVisit")}
+                        </p>
+                        <p className="text-xl font-black text-[#9F7D6B] leading-none mt-1 truncate max-w-full">
+                          {lastVisitLabel}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 mb-3">
+                      <input
+                        type="text"
+                        value={customer.phone || ""}
+                        onChange={(e) =>
+                          updateCustomerField(customer.id, "phone", e.target.value)
+                        }
+                        placeholder={t("customerPhone")}
+                        className="w-full text-sm font-medium bg-stone-50 rounded-2xl px-3 py-2.5 text-[#5F4636] outline-none border border-stone-100 focus:border-[#9F7D6B]"
+                      />
+                      <div className="w-full flex items-center gap-1 bg-stone-50 rounded-2xl px-3 py-2.5 text-[#5F4636] outline-none border border-stone-100 focus-within:border-[#9F7D6B]">
+                        <span className="text-sm font-bold text-stone-400">@</span>
+                        <input
+                          type="text"
+                          value={customer.ig || ""}
+                          onChange={(e) =>
+                            updateCustomerField(
+                              customer.id,
+                              "ig",
+                              e.target.value.replace(/^@+/, "")
+                            )
+                          }
+                          placeholder={t("customerIg")}
+                          className="w-full text-sm font-medium bg-transparent outline-none"
+                        />
+                      </div>
+                    </div>
+                    <textarea
+                      value={customer.note || ""}
+                      onChange={(e) =>
+                        updateCustomerField(customer.id, "note", e.target.value)
+                      }
+                      placeholder={t("customerNote")}
+                      className="w-full min-h-20 text-sm bg-stone-50 rounded-2xl px-3 py-2.5 text-[#5F4636] outline-none border border-stone-100 focus:border-[#9F7D6B] mb-4"
+                    />
+                    <h4 className="text-sm font-bold mb-2">{t("customerHistory")}</h4>
+                    <div className="space-y-2">
+                      {history.length === 0 ? (
+                        <p className="text-xs text-stone-300 italic">{t("noCustomerHistory")}</p>
+                      ) : (
+                        history.map((r) => (
+                          <div key={r.id} className="bg-stone-50 rounded-xl p-3">
+                            <p className="text-[10px] text-stone-400">{r.date}</p>
+                            <p className="text-sm font-bold">{r.items}</p>
+                            <p className="text-xs font-bold text-[#9F7D6B]">${r.amount}</p>
+                            {r.visitNote && (
+                              <p className="text-xs text-stone-500 mt-1">
+                                {t("customerVisitNote")}: {r.visitNote}
+                              </p>
+                            )}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+          )}
+
+          <h3 className="text-base font-bold mb-3 mt-6 flex items-baseline">
+            {t("addCustomerHint")}
+            <span className="ml-auto text-[10px] uppercase font-bold text-stone-400 tracking-widest">
+              ADD CUSTOMER
+            </span>
+          </h3>
+          <div className="bg-white rounded-3xl border border-stone-200 p-5 shadow-sm space-y-3">
+            <input
+              type="text"
+              value={customerForm.name}
+              onChange={(e) => {
+                setCustomerForm((p) => ({ ...p, name: e.target.value }));
+                if (customerFormError) setCustomerFormError("");
+              }}
+              placeholder={`${t("customerName")} *`}
+              className="w-full text-sm font-bold bg-stone-50 rounded-2xl px-3 py-2.5 text-[#5F4636] outline-none border border-stone-100 focus:border-[#9F7D6B]"
+            />
+            <div className="grid grid-cols-2 gap-2">
+              <input
+                type="text"
+                value={customerForm.phone}
+                onChange={(e) =>
+                  setCustomerForm((p) => ({ ...p, phone: e.target.value }))
+                }
+                placeholder={t("customerPhone")}
+                className="w-full text-sm font-medium bg-stone-50 rounded-2xl px-3 py-2.5 text-[#5F4636] outline-none border border-stone-100 focus:border-[#9F7D6B]"
+              />
+              <div className="w-full flex items-center gap-1 bg-stone-50 rounded-2xl px-3 py-2.5 text-[#5F4636] outline-none border border-stone-100 focus-within:border-[#9F7D6B]">
+                <span className="text-sm font-bold text-stone-400">@</span>
+                <input
+                  type="text"
+                  value={customerForm.ig}
+                  onChange={(e) =>
+                    setCustomerForm((p) => ({
+                      ...p,
+                      ig: e.target.value.replace(/^@+/, ""),
+                    }))
+                  }
+                  placeholder={t("customerIg")}
+                  className="w-full text-sm font-medium bg-transparent outline-none"
+                />
+              </div>
+            </div>
+            <textarea
+              value={customerForm.note}
+              onChange={(e) =>
+                setCustomerForm((p) => ({ ...p, note: e.target.value }))
+              }
+              placeholder={t("customerNote")}
+              className="w-full min-h-20 text-sm font-medium bg-stone-50 rounded-2xl px-3 py-2.5 text-[#5F4636] outline-none border border-stone-100 focus:border-[#9F7D6B]"
+            />
+            {customerFormError && (
+              <p className="text-[11px] text-rose-500 font-medium">{customerFormError}</p>
+            )}
+            <button
+              type="button"
+              onClick={addCustomer}
+              className="w-full py-2.5 rounded-2xl bg-[#9F7D6B] text-white text-sm font-bold shadow-sm"
+            >
+              {t("addCustomer")}
+            </button>
           </div>
         </div>
       )}
@@ -1947,6 +2662,71 @@ const App = () => {
               )}
             </div>
           ))}
+
+          <h3 className="text-base font-bold mb-3 flex items-baseline">
+            {t("discountPresetTitle")}
+            <span className="ml-auto text-[10px] uppercase font-bold text-stone-400 tracking-widest">
+              {t("sectionDiscountLabel")}
+            </span>
+          </h3>
+
+          <div className="bg-white p-6 rounded-[2rem] mb-6 border border-stone-50 shadow-sm">
+            <p className="text-[10px] font-bold text-stone-400 mb-3 uppercase tracking-widest">
+              {t("discountPresetPercentLabel")}
+            </p>
+            <div className="grid grid-cols-4 gap-2 mb-4">
+              {discountPresets.percentValues.map((v, idx) => (
+                <div
+                  key={`percent-${idx}`}
+                  className="bg-stone-50 rounded-2xl px-2 py-2.5 border border-stone-100 flex flex-col justify-center"
+                >
+                  <div className="h-8 flex items-center justify-center gap-0.5">
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      value={v}
+                      onFocus={(e) => e.target.select()}
+                      onChange={(e) =>
+                        updateDiscountPercentPreset(idx, e.target.value)
+                      }
+                      className="w-12 h-8 text-center text-xl leading-8 font-bold text-[#9F7D6B] bg-transparent outline-none"
+                    />
+                    <span className="h-8 flex items-center text-sm text-[#9F7D6B] font-bold">
+                      %
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#9F7D6B]/85 text-center mt-1.5 font-semibold leading-none">
+                    {discountPercentLabel(locale, v)}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <p className="text-[10px] font-bold text-stone-400 mb-3 uppercase tracking-widest">
+              {t("discountPresetFixedLabel")}
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              {discountPresets.fixedValues.map((v, idx) => (
+                <div
+                  key={`fixed-${idx}`}
+                  className="h-12 flex items-center gap-1 bg-stone-50 rounded-2xl px-3 py-2 border border-stone-100"
+                >
+                  <span className="h-8 flex items-center text-xs text-stone-400 font-bold">
+                    -$
+                  </span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={v}
+                    onFocus={(e) => e.target.select()}
+                    onChange={(e) => updateDiscountFixedPreset(idx, e.target.value)}
+                    className="w-full h-8 text-center text-xl leading-8 font-bold text-[#9F7D6B] bg-transparent outline-none"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
           <button
             onClick={() => setView("calculator")}
             className="w-full p-4 bg-[#9F7D6B] text-white rounded-[1.25rem] font-bold shadow-lg"
@@ -2013,6 +2793,15 @@ const App = () => {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-[2rem] w-full max-w-sm p-6 shadow-2xl">
             <h3 className="text-center font-bold mb-4">{t("modalTitle")}</h3>
+            <p className="text-xs text-stone-400 mb-2">
+              {t("customerLabel")}: {selectedCustomer?.name || t("noCustomer")}
+            </p>
+            <textarea
+              value={checkoutNote}
+              onChange={(e) => setCheckoutNote(e.target.value)}
+              placeholder={t("customerVisitNotePh")}
+              className="w-full min-h-20 text-xs bg-stone-50 rounded-xl px-3 py-2 text-[#5F4636] outline-none border border-stone-100 focus:border-[#9F7D6B] mb-3"
+            />
             <div className="bg-stone-50 p-4 rounded-2xl mb-4 max-h-60 overflow-y-auto">
               <pre className="whitespace-pre-wrap text-xs leading-relaxed font-mono">
                 {generateSummaryText()}
