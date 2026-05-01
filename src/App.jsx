@@ -390,11 +390,13 @@ const UI_STRINGS = {
   "zh-TW": {
     appTitle: "美甲算算 NailCalc",
     languageLabel: "介面語言",
+    languageLabelTag: "Language",
     language_zhTW: "繁體中文",
     language_zhCN: "简体中文",
     language_en: "English",
 
-    studioNameLabel: "工作室名稱 Studio Name",
+    studioNameLabel: "工作室名稱",
+    studioNameLabelTag: "Studio Name",
     studioNameHint: "※ 名稱將顯示於消費明細抬頭",
 
     pricingTitle: "價格設定",
@@ -517,11 +519,13 @@ const UI_STRINGS = {
   "zh-CN": {
     appTitle: "美甲算算 NailCalc",
     languageLabel: "界面语言",
+    languageLabelTag: "Language",
     language_zhTW: "繁体中文",
     language_zhCN: "简体中文",
     language_en: "English",
 
-    studioNameLabel: "工作室名称 Studio Name",
+    studioNameLabel: "工作室名称",
+    studioNameLabelTag: "Studio Name",
     studioNameHint: "※ 名称将显示在消费明细抬头",
 
     pricingTitle: "价格设置",
@@ -644,11 +648,13 @@ const UI_STRINGS = {
   en: {
     appTitle: "NailCalc",
     languageLabel: "Language",
+    languageLabelTag: "Language",
     language_zhTW: "Traditional Chinese",
     language_zhCN: "Simplified Chinese",
     language_en: "English",
 
     studioNameLabel: "Studio Name",
+    studioNameLabelTag: "Studio Name",
     studioNameHint: "※ This name appears at the top of receipts.",
 
     pricingTitle: "Pricing",
@@ -2422,27 +2428,33 @@ const App = () => {
                       </button>
                     </div>
                     <div className="grid grid-cols-3 gap-2 mb-4 text-center">
-                      <div className="bg-stone-50 rounded-xl h-20 px-2 flex flex-col items-center justify-center">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-stone-400">
+                      <div className="bg-stone-50 rounded-xl min-h-[5rem] px-1.5 py-2 flex flex-col items-center justify-center">
+                        <p className="max-w-full text-center text-[12px] font-bold uppercase leading-snug text-stone-400 mb-1">
                           {t("customerTotalSpent")}
                         </p>
-                        <p className="text-xl font-black text-[#9F7D6B] leading-none mt-1">
-                          ${stats.totalSpent}
+                        <p className="text-xl font-black text-[#9F7D6B] leading-none tabular-nums">
+                          ${stats.totalSpent.toLocaleString(
+                            locale === "en"
+                              ? "en-US"
+                              : locale === "zh-CN"
+                                ? "zh-CN"
+                                : "zh-TW"
+                          )}
                         </p>
                       </div>
-                      <div className="bg-stone-50 rounded-xl h-20 px-2 flex flex-col items-center justify-center">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-stone-400">
+                      <div className="bg-stone-50 rounded-xl min-h-[5rem] px-1.5 py-2 flex flex-col items-center justify-center">
+                        <p className="max-w-full text-center text-[12px] font-bold uppercase leading-snug text-stone-400 mb-1">
                           {t("customerVisits")}
                         </p>
-                        <p className="text-xl font-black text-[#9F7D6B] leading-none mt-1">
+                        <p className="text-xl font-black text-[#9F7D6B] leading-none tabular-nums">
                           {stats.visits}
                         </p>
                       </div>
-                      <div className="bg-stone-50 rounded-xl h-20 px-2 flex flex-col items-center justify-center">
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-stone-400">
+                      <div className="bg-stone-50 rounded-xl min-h-[5rem] px-1.5 py-2 flex flex-col items-center justify-center">
+                        <p className="max-w-full text-center text-[12px] font-bold uppercase leading-snug text-stone-400 mb-1">
                           {t("customerLastVisit")}
                         </p>
-                        <p className="text-xl font-black text-[#9F7D6B] leading-none mt-1 truncate max-w-full">
+                        <p className="text-xl font-black text-[#9F7D6B] leading-none truncate max-w-full tabular-nums">
                           {lastVisitLabel}
                         </p>
                       </div>
@@ -2575,7 +2587,14 @@ const App = () => {
       {/* 管理介面 */}
       {view === "admin" && (
         <div className="p-6 max-w-md mx-auto">
-          <h3 className="text-base font-bold mb-3">{t("studioNameLabel")}</h3>
+          <h3 className="text-base font-bold mb-3 flex items-baseline">
+            {t("studioNameLabel")}
+            {locale !== "en" ? (
+              <span className="ml-auto text-[10px] uppercase font-bold text-stone-400 tracking-widest">
+                {t("studioNameLabelTag")}
+              </span>
+            ) : null}
+          </h3>
           <div className="mb-10 px-4 py-3.5 bg-white rounded-3xl border border-stone-200 shadow-sm relative overflow-hidden">
             <div className="flex items-center border-b-2 border-stone-100 py-2.5 focus-within:border-[#9F7D6B] transition-colors">
               <input
@@ -2586,12 +2605,19 @@ const App = () => {
                 className="w-full min-h-0 flex-1 border-0 bg-transparent py-0 text-xl font-bold leading-tight text-[#9F7D6B] outline-none"
               />
             </div>
-            <p className="mt-3 text-xs font-medium leading-relaxed text-[#000000]">
+            <p className="mt-3 text-xs font-medium leading-relaxed text-[#5F4636]">
               {t("studioNameHint")}
             </p>
           </div>
 
-          <h3 className="text-base font-bold mb-3">{t("languageLabel")}</h3>
+          <h3 className="text-base font-bold mb-3 flex items-baseline">
+            {t("languageLabel")}
+            {locale !== "en" ? (
+              <span className="ml-auto text-[10px] uppercase font-bold text-stone-400 tracking-widest">
+                {t("languageLabelTag")}
+              </span>
+            ) : null}
+          </h3>
           <div className="mb-10 px-4 py-3.5 bg-white rounded-3xl border border-stone-200 shadow-sm relative overflow-hidden">
             <select
               value={locale}
