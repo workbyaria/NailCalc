@@ -390,7 +390,6 @@ const UI_STRINGS = {
   "zh-TW": {
     appTitle: "美甲算算 NailCalc",
     languageLabel: "介面語言",
-    languageHint: "預設會依你的系統語言自動選擇；你也可以在這裡手動覆寫並記住。",
     language_zhTW: "繁體中文",
     language_zhCN: "简体中文",
     language_en: "English",
@@ -473,6 +472,7 @@ const UI_STRINGS = {
     sortSpent: "總消費",
     addCustomerHint: "新增客戶",
     noSearchResult: "找不到符合的客戶",
+    customerQuickAdd: "找不到客戶？新增「${name}」",
     deleteCustomer: "Delete",
     confirmDeleteCustomer: "確定要刪除這位客戶嗎？已綁定的紀錄會保留，但不再連結此客戶。",
 
@@ -517,7 +517,6 @@ const UI_STRINGS = {
   "zh-CN": {
     appTitle: "美甲算算 NailCalc",
     languageLabel: "界面语言",
-    languageHint: "默认会跟随你的系统语言；你也可以在这里手动覆盖并记住。",
     language_zhTW: "繁体中文",
     language_zhCN: "简体中文",
     language_en: "English",
@@ -600,6 +599,7 @@ const UI_STRINGS = {
     sortSpent: "总消费",
     addCustomerHint: "新增客户",
     noSearchResult: "找不到符合的客户",
+    customerQuickAdd: "找不到客户？新增「${name}」",
     deleteCustomer: "Delete",
     confirmDeleteCustomer: "确定要删除该客户吗？已绑定的记录会保留，但不再关联此客户。",
 
@@ -644,13 +644,11 @@ const UI_STRINGS = {
   en: {
     appTitle: "NailCalc",
     languageLabel: "Language",
-    languageHint:
-      "Defaults to your system language.",
     language_zhTW: "Traditional Chinese",
     language_zhCN: "Simplified Chinese",
     language_en: "English",
 
-    studioNameLabel: "Studio name",
+    studioNameLabel: "Studio Name",
     studioNameHint: "※ This name appears at the top of receipts.",
 
     pricingTitle: "Pricing",
@@ -666,7 +664,7 @@ const UI_STRINGS = {
     sectionSpaLabel: "Spa & Care",
     sectionOthersTitle: "Other Services",
     sectionOthersLabel: "Others",
-    sectionDiscountTitle: "Discounts",
+    sectionDiscountTitle: "Discount",
     sectionDiscountLabel: "Discount",
 
     perFinger: "/ nail",
@@ -690,7 +688,7 @@ const UI_STRINGS = {
     monthQuery: "Month",
     revenueMonth: "Revenue",
     visitsMonth: "Clients",
-    checkoutRecords: "Checkout history",
+    checkoutRecords: "Checkout History",
     exportCsv: "Export CSV",
     noRecordsMonth: "No records for this month",
 
@@ -705,7 +703,7 @@ const UI_STRINGS = {
     customerLabel: "Customer",
     customerOptional: "Optional, add later anytime",
     customerSearchPh: "Search by name, phone, or IG",
-    noCustomer: "No customer",
+    noCustomer: "Not specified",
     manageCustomers: "Manage customers",
     customerName: "Name",
     customerPhone: "Phone",
@@ -728,6 +726,7 @@ const UI_STRINGS = {
     sortSpent: "Spending",
     addCustomerHint: "Add Customer",
     noSearchResult: "No matching customers",
+    customerQuickAdd: "No matches? Add \"${name}\"",
     deleteCustomer: "Delete",
     confirmDeleteCustomer:
       "Delete this customer? Existing records will be kept but unlinked.",
@@ -753,7 +752,7 @@ const UI_STRINGS = {
 
     summaryTitle: "Receipt",
     summaryThanks: "Thank you for booking, have a great day!",
-    summaryDiscount: "Discounts",
+    summaryDiscount: "Discount",
     summaryTotal: "Total",
     lineProduct: "Product add-on",
     lineOther: "Other services",
@@ -806,6 +805,17 @@ const formatShortDateFromId = (locale, id) => {
     month: "2-digit",
     day: "2-digit",
   });
+};
+
+/** IG 與電話並列一行，中間用間隔號；僅填其一則只顯示該項。 */
+const customerContactSubtitle = (c) => {
+  const ig = String(c.ig || "").trim().replace(/^@+/, "");
+  const phone = String(c.phone || "").trim();
+  const parts = [];
+  if (ig) parts.push(`@${ig}`);
+  if (phone) parts.push(phone);
+  if (parts.length === 0) return "-";
+  return parts.join(" · ");
 };
 
 /** @type {Record<AppLocale, Record<string, Record<string, string>>>} */
@@ -1242,6 +1252,33 @@ const App = () => {
     });
   }, [customerDirectoryQuery, customers, customerSort, customerStatsMap]);
 
+  const customerLinkedSpendTotal = useMemo(
+    () =>
+      records
+        .filter((r) => r.customerId)
+        .reduce((acc, r) => acc + (Number(r.amount) || 0), 0),
+    [records]
+  );
+
+  const customerSpentKpiDisplay = useMemo(() => {
+    const loc = locale === "en" ? "en-US" : locale === "zh-CN" ? "zh-CN" : "zh-TW";
+    return `$${customerLinkedSpendTotal.toLocaleString(loc)}`;
+  }, [customerLinkedSpendTotal, locale]);
+
+  const customerVisitCountKpi = useMemo(
+    () => records.filter((r) => r.customerId).length,
+    [records]
+  );
+
+  const kpiValueSizeClass = (displayText) => {
+    const len = String(displayText).length;
+    if (len >= 15) return "text-sm leading-none";
+    if (len >= 12) return "text-base leading-none";
+    if (len >= 9) return "text-lg leading-none";
+    if (len >= 7) return "text-xl leading-none";
+    return "text-2xl leading-none";
+  };
+
   const generateSummaryText = () => {
     let text = `🤍 ${studioName} ${t("summaryTitle")} 🤍\n----------------------\n`;
     if (selections.removal)
@@ -1271,10 +1308,10 @@ const App = () => {
     if (checkoutNote.trim()) {
       text += `▫️ ${t("customerVisitNote")}: ${checkoutNote.trim()}\n`;
     }
-    text += `----------------------\n🤍 ${t("summaryTotal")}: $${calculateTotal()}\n\n ${t(
+    text += `----------------------\n🤍 ${t("summaryTotal")}: $${calculateTotal()}\n\n${t(
       "summaryThanks"
     )}`;
-    return text;
+    return text.trim();
   };
 
   const copyToClipboard = () => {
@@ -1499,6 +1536,22 @@ const App = () => {
     setCustomerFormError("");
   };
 
+  const quickAddCustomerFromSearch = () => {
+    const name = customerSearch.trim();
+    if (!name) return;
+    const newCustomer = {
+      id: Date.now(),
+      name,
+      phone: "",
+      ig: "",
+      note: "",
+      createdAt: new Date().toISOString(),
+    };
+    setCustomers((prev) => [newCustomer, ...prev]);
+    setSelectedCustomerId(newCustomer.id);
+    setActiveCustomerId(newCustomer.id);
+  };
+
   const updateCustomerField = (customerId, field, value) => {
     setCustomers((prev) =>
       prev.map((c) => (c.id === customerId ? { ...c, [field]: value } : c))
@@ -1543,22 +1596,31 @@ const App = () => {
     });
   };
 
-  const SectionHeader = ({ title, label }) => (
-    <div className="flex justify-between items-baseline mb-4 pr-1">
-      <h2
-        style={{ fontSize: theme.fontSize.sectionTitle }}
-        className="font-bold"
-      >
-        {title}
-      </h2>
-      <span
-        style={{ fontSize: theme.fontSize.label, color: theme.textMuted }}
-        className="font-medium uppercase tracking-widest"
-      >
-        {label}
-      </span>
-    </div>
-  );
+  const SectionHeader = ({ title, label }) => {
+    const showLabel =
+      label &&
+      (locale !== "en" ||
+        String(title).trim().toLowerCase() !==
+          String(label).trim().toLowerCase());
+    return (
+      <div className="flex justify-between items-baseline mb-4 pr-1">
+        <h2
+          style={{ fontSize: theme.fontSize.sectionTitle }}
+          className="font-bold"
+        >
+          {title}
+        </h2>
+        {showLabel ? (
+          <span
+            style={{ fontSize: theme.fontSize.label, color: theme.textMuted }}
+            className="font-medium uppercase tracking-widest"
+          >
+            {label}
+          </span>
+        ) : null}
+      </div>
+    );
+  };
 
   const greetingLines = useMemo(() => {
     const hour = new Date().getHours();
@@ -1656,20 +1718,22 @@ const App = () => {
       {view === "calculator" && (
         <div className="p-5 max-w-lg mx-auto space-y-8">
           <p
-            className="w-full text-center text-[#9F7D6B] font-bold leading-snug py-2.5 px-4 bg-white/60 border border-stone-200 rounded-3xl"
+            className="w-full text-center leading-snug py-1 px-2 bg-transparent border-0"
             style={{ fontSize: theme.fontSize.btnMain }}
           >
-            <span className="block">{greetingLines.line1}</span>
-            <span className="block mt-1 font-semibold text-[#9F7D6B]/90">
+            <span className="block font-bold text-[#9F7D6B]">{greetingLines.line1}</span>
+            <span className="block mt-1 text-sm font-medium text-[#5F4636]/80">
               {greetingLines.line2}
             </span>
           </p>
           <section className="bg-white rounded-3xl border border-stone-200 p-4 shadow-sm space-y-2">
             <div className="flex flex-col items-center justify-center gap-1 mb-1 text-center">
               <h3 className="font-bold text-sm">{t("customerLabel")}</h3>
-              <span className="text-[10px] font-medium uppercase tracking-widest text-stone-400">
-                Customer
-              </span>
+              {locale !== "en" ? (
+                <span className="text-[10px] font-medium uppercase tracking-widest text-stone-400">
+                  Customer
+                </span>
+              ) : null}
             </div>
             <input
               type="text"
@@ -1692,25 +1756,40 @@ const App = () => {
               </button>
             </div>
             {customerSearch.trim() ? (
-              <div className="grid grid-cols-2 gap-2">
-                {filteredCustomers.slice(0, 6).map((c) => (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => setSelectedCustomerId(c.id)}
-                    className={`px-3 py-2 rounded-xl text-left border ${
-                      selectedCustomerId === c.id
-                        ? "border-[#9F7D6B] bg-[#EBDCD3] text-[#9F7D6B]"
-                        : "border-stone-200 bg-white text-stone-500"
-                    }`}
-                  >
-                    <p className="text-xs font-bold truncate">{c.name}</p>
-                    <p className="text-[11px] opacity-80 truncate mt-0.5">
-                      {c.ig ? `@${c.ig}` : c.phone || "-"}
-                    </p>
-                  </button>
-                ))}
-              </div>
+              filteredCustomers.length > 0 ? (
+                <div className="grid grid-cols-2 gap-2">
+                  {filteredCustomers.slice(0, 6).map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => setSelectedCustomerId(c.id)}
+                      className={`px-3 py-2 rounded-xl text-left border ${
+                        selectedCustomerId === c.id
+                          ? "border-[#9F7D6B] bg-[#EBDCD3] text-[#9F7D6B]"
+                          : "border-stone-200 bg-white text-stone-500"
+                      }`}
+                    >
+                      <p className="text-xs font-bold truncate">{c.name}</p>
+                      <p className="text-[11px] opacity-80 truncate mt-0.5">
+                        {customerContactSubtitle(c)}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={quickAddCustomerFromSearch}
+                  className="w-full py-2.5 rounded-2xl text-xs font-bold border border-[#9F7D6B] bg-[#EBDCD3] text-[#9F7D6B]"
+                >
+                  {t("customerQuickAdd", {
+                    name:
+                      customerSearch.trim().length > 24
+                        ? `${customerSearch.trim().slice(0, 24)}…`
+                        : customerSearch.trim(),
+                  })}
+                </button>
+              )
             ) : null}
           </section>
           {/* 卸甲服務 */}
@@ -1737,8 +1816,10 @@ const App = () => {
                     {priceItemLabel(locale, "removal", item)}
                   </div>
                   <div
-                    style={{ fontSize: theme.fontSize.btnSub }}
-                    className="text-stone-400"
+                    style={{
+                      fontSize: theme.fontSize.btnMain,
+                      color: theme.textMain,
+                    }}
                   >
                     ${prices.removal[item]}
                   </div>
@@ -1771,8 +1852,10 @@ const App = () => {
                     {priceItemLabel(locale, "base", item)}
                   </div>
                   <div
-                    style={{ fontSize: theme.fontSize.baseBtnSub }}
-                    className="opacity-60"
+                    style={{
+                      fontSize: theme.fontSize.btnMain,
+                      color: theme.textMain,
+                    }}
                   >
                     ${prices.base[item]}
                   </div>
@@ -1802,8 +1885,10 @@ const App = () => {
                         {priceItemLabel(locale, "addons", item)}
                       </div>
                       <div
-                        style={{ fontSize: theme.fontSize.btnSub }}
-                        className="text-stone-400"
+                        style={{
+                          fontSize: theme.fontSize.btnMain,
+                          color: theme.textMain,
+                        }}
                       >
                         ${prices.addons[item]} {t("perFinger")}
                       </div>
@@ -1909,8 +1994,10 @@ const App = () => {
                     {priceItemLabel(locale, "spa", item)}
                   </div>
                   <div
-                    style={{ fontSize: theme.fontSize.btnMain }}
-                    className="opacity-50"
+                    style={{
+                      fontSize: theme.fontSize.btnMain,
+                      color: theme.textMain,
+                    }}
                   >
                     ${prices.spa[item]}
                   </div>
@@ -2015,7 +2102,7 @@ const App = () => {
                       selections.discountType === d.t &&
                       selections.discountVal === d.v
                         ? "border-[#9F7D6B] bg-[#EBDCD3] text-[#9F7D6B]"
-                        : "border-stone-200 text-stone-400"
+                        : "border-stone-200 text-[#5F4636]"
                     }`}
                   >
                     {d.l}
@@ -2037,7 +2124,7 @@ const App = () => {
                       selections.discountType === "fixed" &&
                       selections.discountVal === v
                         ? "border-[#9F7D6B] bg-[#EBDCD3] text-[#9F7D6B]"
-                        : "border-stone-200 text-stone-400"
+                        : "border-stone-200 text-[#5F4636]"
                     }`}
                   >
                     {t("discountFixed", { v })}
@@ -2050,10 +2137,10 @@ const App = () => {
                   <span className="text-xs">{t("discountCustom")}</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="text-[#9F7D6B] font-bold text-xs">-$</span>
+                  <span className="text-[#5F4636] font-bold text-xs">-$</span>
                   <input
                     type="number"
-                    className="w-16 text-right font-bold text-[#9F7D6B] bg-stone-50 rounded-lg p-1.5 focus:outline-none"
+                    className="w-16 text-right font-bold text-[#5F4636] bg-stone-50 rounded-lg p-1.5 focus:outline-none"
                     value={
                       selections.discountType === "fixed" &&
                       !discountPresets.fixedValues.includes(selections.discountVal)
@@ -2150,7 +2237,7 @@ const App = () => {
 
           <div className="space-y-3">
             {filteredRecords.length === 0 ? (
-              <div className="text-center py-10 text-stone-300 text-sm italic">
+              <div className="text-center py-10 text-sm text-stone-500">
                 {t("noRecordsMonth")}
               </div>
             ) : (
@@ -2160,29 +2247,34 @@ const App = () => {
                   className="bg-white p-4 rounded-2xl border border-stone-100"
                 >
                   <div className="flex justify-between items-start gap-3">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[10px] text-stone-400">{r.date}</p>
-                      <p className="text-sm font-bold truncate">{r.items}</p>
-                      <p className="text-xs text-stone-400 mt-1">
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <p className="text-xs text-stone-500">{r.date}</p>
+                      <p className="text-sm font-bold text-[#5F4636] leading-snug truncate">
+                        {r.items}
+                      </p>
+                      <p className="text-xs text-stone-500 truncate">
                         {t("customerLabel")}: {r.customerName || t("noCustomer")}
                       </p>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <span className="font-black text-[#9F7D6B]">${r.amount}</span>
+                    <div className="flex items-center gap-3 shrink-0">
+                      <span className="text-sm font-bold text-[#9F7D6B] tabular-nums">
+                        ${r.amount}
+                      </span>
                       <button
+                        type="button"
                         onClick={() => deleteRecord(r.id)}
-                        className="text-stone-200 hover:text-red-400"
+                        className="text-stone-300 hover:text-stone-500"
                       >
                         <Icon name="trash" size={16} />
                       </button>
                     </div>
                   </div>
-                  <div className="mt-2">
+                  <div className="mt-3">
                     <textarea
                       value={r.visitNote || ""}
                       onChange={(e) => updateRecordNote(r.id, e.target.value)}
                       placeholder={t("customerVisitNotePh")}
-                      className="w-full min-h-16 text-xs bg-stone-50 rounded-xl px-3 py-2 text-[#5F4636] outline-none border border-stone-100 focus:border-[#9F7D6B]"
+                      className="w-full min-h-11 text-xs bg-stone-50 rounded-xl px-3 py-1.5 text-[#5F4636] placeholder:text-stone-400 outline-none border border-stone-100 focus:border-[#9F7D6B]"
                     />
                   </div>
                 </div>
@@ -2196,32 +2288,41 @@ const App = () => {
         <div className="p-6 max-w-md mx-auto">
           <SectionHeader title={t("customerPageTitle")} label="CRM" />
 
-          <div className="grid grid-cols-3 gap-3 mb-5">
-            <div className="bg-white p-4 rounded-3xl shadow-sm border border-stone-100 flex flex-col justify-center">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-5">
+            <div className="min-w-0 bg-white p-3 sm:p-4 rounded-3xl shadow-sm border border-stone-100 flex flex-col justify-center">
               <p className="text-center text-[12px] text-stone-400 font-bold uppercase mb-1">
                 {t("customerCount")}
               </p>
-              <p className="text-center text-2xl font-black text-[#9F7D6B] leading-none">
+              <p
+                className={`text-center font-black tabular-nums text-[#9F7D6B] max-w-full min-w-0 px-0.5 ${kpiValueSizeClass(
+                  String(customers.length)
+                )}`}
+              >
                 {customers.length}
               </p>
             </div>
-            <div className="bg-white p-4 rounded-3xl shadow-sm border border-stone-100 flex flex-col justify-center">
+            <div className="min-w-0 bg-white p-3 sm:p-4 rounded-3xl shadow-sm border border-stone-100 flex flex-col justify-center">
               <p className="text-center text-[12px] text-stone-400 font-bold uppercase mb-1">
                 {t("customerVisits")}
               </p>
-              <p className="text-center text-2xl font-black text-[#9F7D6B] leading-none">
-                {records.filter((r) => r.customerId).length}
+              <p
+                className={`text-center font-black tabular-nums text-[#9F7D6B] max-w-full min-w-0 px-0.5 ${kpiValueSizeClass(
+                  String(customerVisitCountKpi)
+                )}`}
+              >
+                {customerVisitCountKpi}
               </p>
             </div>
-            <div className="bg-white p-4 rounded-3xl shadow-sm border border-stone-100 flex flex-col justify-center">
+            <div className="min-w-0 bg-white p-3 sm:p-4 rounded-3xl shadow-sm border border-stone-100 flex flex-col justify-center">
               <p className="text-center text-[12px] text-stone-400 font-bold uppercase mb-1">
                 {t("customerTotalSpent")}
               </p>
-              <p className="text-center text-2xl font-black text-[#9F7D6B] leading-none">
-                $
-                {records
-                  .filter((r) => r.customerId)
-                  .reduce((acc, r) => acc + (Number(r.amount) || 0), 0)}
+              <p
+                className={`text-center font-black tabular-nums text-[#9F7D6B] max-w-full min-w-0 px-0.5 ${kpiValueSizeClass(
+                  customerSpentKpiDisplay
+                )}`}
+              >
+                {customerSpentKpiDisplay}
               </p>
             </div>
           </div>
@@ -2268,14 +2369,22 @@ const App = () => {
                   >
                     <div className="flex items-center justify-between gap-3">
                       <div className="min-w-0">
-                        <p className="text-sm font-bold text-[#5F4636] truncate">{c.name}</p>
-                        <p className="text-xs text-stone-400 mt-0.5 truncate">
-                          {c.ig ? `@${c.ig}` : c.phone || "-"}
+                        <p className="text-base font-bold text-[#5F4636] truncate">{c.name}</p>
+                        <p className="text-sm text-stone-500 mt-0.5 truncate">
+                          {customerContactSubtitle(c)}
                         </p>
                       </div>
-                      <div className="text-right">
-                        <p className="text-xs font-black text-[#9F7D6B]">${stats.totalSpent}</p>
-                        <p className="text-[10px] text-stone-400">
+                      <div className="shrink-0 text-right min-w-0">
+                        <p className="text-base font-bold tabular-nums text-[#9F7D6B] leading-tight">
+                          ${stats.totalSpent.toLocaleString(
+                            locale === "en"
+                              ? "en-US"
+                              : locale === "zh-CN"
+                                ? "zh-CN"
+                                : "zh-TW"
+                          )}
+                        </p>
+                        <p className="text-sm font-medium text-stone-600 leading-tight mt-1">
                           {stats.visits} {t("customerVisits")}
                         </p>
                       </div>
@@ -2466,45 +2575,49 @@ const App = () => {
       {/* 管理介面 */}
       {view === "admin" && (
         <div className="p-6 max-w-md mx-auto">
-          <div className="mb-10 p-6 bg-white rounded-3xl border border-stone-200 shadow-sm relative overflow-hidden">
-            <label className="text-[10px] font-bold text-stone-400 mb-2 block uppercase tracking-widest">
-              {t("studioNameLabel")}
-            </label>
-            <input
-              type="text"
-              value={studioName}
-              onChange={(e) => setStudioName(e.target.value)}
-              onFocus={(e) => e.target.select()}
-              className="w-full text-xl font-bold text-[#9F7D6B] bg-transparent outline-none border-b-2 border-stone-100 focus:border-[#9F7D6B] pb-2"
-            />
-            <p className="text-[10px] text-stone-300 mt-3 font-medium">
+          <h3 className="text-base font-bold mb-3">{t("studioNameLabel")}</h3>
+          <div className="mb-10 px-4 py-3.5 bg-white rounded-3xl border border-stone-200 shadow-sm relative overflow-hidden">
+            <div className="flex items-center border-b-2 border-stone-100 py-2.5 focus-within:border-[#9F7D6B] transition-colors">
+              <input
+                type="text"
+                value={studioName}
+                onChange={(e) => setStudioName(e.target.value)}
+                onFocus={(e) => e.target.select()}
+                className="w-full min-h-0 flex-1 border-0 bg-transparent py-0 text-xl font-bold leading-tight text-[#9F7D6B] outline-none"
+              />
+            </div>
+            <p className="mt-3 text-xs font-medium leading-relaxed text-[#000000]">
               {t("studioNameHint")}
             </p>
           </div>
 
-          <div className="mb-10 p-6 bg-white rounded-3xl border border-stone-200 shadow-sm relative overflow-hidden">
-            <label className="text-[10px] font-bold text-stone-400 mb-2 block uppercase tracking-widest">
-              {t("languageLabel")}
-            </label>
+          <h3 className="text-base font-bold mb-3">{t("languageLabel")}</h3>
+          <div className="mb-10 px-4 py-3.5 bg-white rounded-3xl border border-stone-200 shadow-sm relative overflow-hidden">
             <select
               value={locale}
               onChange={(e) => setLocale(/** @type {AppLocale} */ (e.target.value))}
-              className="w-full text-sm font-bold bg-stone-50 rounded-2xl px-3 py-3 text-[#5F4636] outline-none border border-stone-100 focus:border-[#9F7D6B]"
+              className="w-full min-h-[2.75rem] appearance-none bg-stone-50 bg-no-repeat rounded-full border border-stone-100 py-2.5 pl-4 pr-12 text-sm font-bold leading-normal text-[#5F4636] outline-none focus:border-[#9F7D6B]"
+              style={{
+                backgroundImage: `url("data:image/svg+xml;charset=utf-8,${encodeURIComponent(
+                  '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5F4636" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>'
+                )}")`,
+                backgroundPosition: "right 0.875rem center",
+                backgroundSize: "1.125rem",
+              }}
             >
               <option value="zh-TW">{t("language_zhTW")}</option>
               <option value="zh-CN">{t("language_zhCN")}</option>
               <option value="en">{t("language_en")}</option>
             </select>
-            <p className="text-[10px] text-stone-300 mt-3 font-medium leading-relaxed">
-              {t("languageHint")}
-            </p>
           </div>
 
           <h3 className="text-base font-bold mb-3 flex items-baseline">
             {t("pricingTitle")}
-            <span className="ml-auto text-[10px] uppercase font-bold text-stone-400 tracking-widest">
-              {t("pricingLabel")}
-            </span>
+            {locale !== "en" ? (
+              <span className="ml-auto text-[10px] uppercase font-bold text-stone-400 tracking-widest">
+                {t("pricingLabel")}
+              </span>
+            ) : null}
           </h3>
 
           {Object.entries(prices).map(([cat, items]) => (
@@ -2665,16 +2778,18 @@ const App = () => {
 
           <h3 className="text-base font-bold mb-3 flex items-baseline">
             {t("discountPresetTitle")}
-            <span className="ml-auto text-[10px] uppercase font-bold text-stone-400 tracking-widest">
-              {t("sectionDiscountLabel")}
-            </span>
+            {locale !== "en" ? (
+              <span className="ml-auto text-[10px] uppercase font-bold text-stone-400 tracking-widest">
+                {t("sectionDiscountLabel")}
+              </span>
+            ) : null}
           </h3>
 
           <div className="bg-white p-6 rounded-[2rem] mb-6 border border-stone-50 shadow-sm">
             <p className="text-[10px] font-bold text-stone-400 mb-3 uppercase tracking-widest">
               {t("discountPresetPercentLabel")}
             </p>
-            <div className="grid grid-cols-4 gap-2 mb-4">
+            <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
               {discountPresets.percentValues.map((v, idx) => (
                 <div
                   key={`percent-${idx}`}
@@ -2696,7 +2811,7 @@ const App = () => {
                       %
                     </span>
                   </div>
-                  <p className="text-xs text-[#9F7D6B]/85 text-center mt-1.5 font-semibold leading-none">
+                  <p className="text-xs text-center mt-1.5 font-medium leading-snug text-[#5F4636]">
                     {discountPercentLabel(locale, v)}
                   </p>
                 </div>
@@ -2709,9 +2824,9 @@ const App = () => {
               {discountPresets.fixedValues.map((v, idx) => (
                 <div
                   key={`fixed-${idx}`}
-                  className="h-12 flex items-center gap-1 bg-stone-50 rounded-2xl px-3 py-2 border border-stone-100"
+                  className="h-12 flex items-center justify-center gap-0.5 bg-stone-50 rounded-2xl px-2 py-2 border border-stone-100"
                 >
-                  <span className="h-8 flex items-center text-xs text-stone-400 font-bold">
+                  <span className="shrink-0 text-xs font-bold tabular-nums leading-none text-[#9F7D6B]">
                     -$
                   </span>
                   <input
@@ -2721,7 +2836,7 @@ const App = () => {
                     value={v}
                     onFocus={(e) => e.target.select()}
                     onChange={(e) => updateDiscountFixedPreset(idx, e.target.value)}
-                    className="w-full h-8 text-center text-xl leading-8 font-bold text-[#9F7D6B] bg-transparent outline-none"
+                    className="h-8 w-11 min-w-0 flex-none text-center text-xl leading-8 font-bold tabular-nums text-[#9F7D6B] bg-transparent outline-none"
                   />
                 </div>
               ))}
