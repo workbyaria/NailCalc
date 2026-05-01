@@ -2294,37 +2294,39 @@ const App = () => {
         <div className="p-6 max-w-md mx-auto">
           <SectionHeader title={t("customerPageTitle")} label="CRM" />
 
-          <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-5">
-            <div className="min-w-0 bg-white p-3 sm:p-4 rounded-3xl shadow-sm border border-stone-100 flex flex-col justify-center">
-              <p className="text-center text-[12px] text-stone-400 font-bold uppercase mb-1">
-                {t("customerCount")}
-              </p>
-              <p
-                className={`text-center font-black tabular-nums text-[#9F7D6B] max-w-full min-w-0 px-0.5 ${kpiValueSizeClass(
-                  String(customers.length)
-                )}`}
-              >
-                {customers.length}
-              </p>
+          <div className="mb-5 space-y-2 sm:space-y-3">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3">
+              <div className="min-w-0 bg-white p-3 sm:p-4 rounded-3xl shadow-sm border border-stone-100 flex flex-col justify-center">
+                <p className="text-center text-[12px] text-stone-400 font-bold uppercase mb-1">
+                  {t("customerCount")}
+                </p>
+                <p
+                  className={`text-center font-black tabular-nums text-[#9F7D6B] max-w-full min-w-0 px-0.5 ${kpiValueSizeClass(
+                    String(customers.length)
+                  )}`}
+                >
+                  {customers.length}
+                </p>
+              </div>
+              <div className="min-w-0 bg-white p-3 sm:p-4 rounded-3xl shadow-sm border border-stone-100 flex flex-col justify-center">
+                <p className="text-center text-[12px] text-stone-400 font-bold uppercase mb-1">
+                  {t("customerVisits")}
+                </p>
+                <p
+                  className={`text-center font-black tabular-nums text-[#9F7D6B] max-w-full min-w-0 px-0.5 ${kpiValueSizeClass(
+                    String(customerVisitCountKpi)
+                  )}`}
+                >
+                  {customerVisitCountKpi}
+                </p>
+              </div>
             </div>
-            <div className="min-w-0 bg-white p-3 sm:p-4 rounded-3xl shadow-sm border border-stone-100 flex flex-col justify-center">
-              <p className="text-center text-[12px] text-stone-400 font-bold uppercase mb-1">
-                {t("customerVisits")}
-              </p>
-              <p
-                className={`text-center font-black tabular-nums text-[#9F7D6B] max-w-full min-w-0 px-0.5 ${kpiValueSizeClass(
-                  String(customerVisitCountKpi)
-                )}`}
-              >
-                {customerVisitCountKpi}
-              </p>
-            </div>
-            <div className="min-w-0 bg-white p-3 sm:p-4 rounded-3xl shadow-sm border border-stone-100 flex flex-col justify-center">
+            <div className="min-w-0 bg-white p-3 sm:p-4 rounded-3xl shadow-sm border border-stone-100 flex flex-col items-center justify-center text-center">
               <p className="text-center text-[12px] text-stone-400 font-bold uppercase mb-1">
                 {t("customerTotalSpent")}
               </p>
               <p
-                className={`text-center font-black tabular-nums text-[#9F7D6B] max-w-full min-w-0 px-0.5 ${kpiValueSizeClass(
+                className={`text-center font-black tabular-nums text-[#9F7D6B] max-w-full min-w-0 px-1 ${kpiValueSizeClass(
                   customerSpentKpiDisplay
                 )}`}
               >
@@ -2413,6 +2415,9 @@ const App = () => {
                   lastRecordId: 0,
                 };
                 const lastVisitLabel = formatShortDateFromId(locale, stats.lastRecordId);
+                const spentLocale =
+                  locale === "en" ? "en-US" : locale === "zh-CN" ? "zh-CN" : "zh-TW";
+                const spentDisplay = `$${stats.totalSpent.toLocaleString(spentLocale)}`;
                 const history = records.filter((r) => r.customerId === customer.id);
                 return (
                   <>
@@ -2427,35 +2432,35 @@ const App = () => {
                         {t("deleteCustomer")}
                       </button>
                     </div>
-                    <div className="grid grid-cols-3 gap-2 mb-4 text-center">
-                      <div className="bg-stone-50 rounded-xl min-h-[5rem] px-1.5 py-2 flex flex-col items-center justify-center">
+                    <div className="space-y-2 mb-4">
+                      <div className="grid grid-cols-2 gap-2 text-center">
+                        <div className="bg-stone-50 rounded-xl min-h-[5rem] px-2 py-2 flex flex-col items-center justify-center">
+                          <p className="max-w-full text-center text-[12px] font-bold uppercase leading-snug text-stone-400 mb-1">
+                            {t("customerVisits")}
+                          </p>
+                          <p className="text-xl font-black text-[#9F7D6B] leading-none tabular-nums">
+                            {stats.visits}
+                          </p>
+                        </div>
+                        <div className="bg-stone-50 rounded-xl min-h-[5rem] px-2 py-2 flex flex-col items-center justify-center">
+                          <p className="max-w-full text-center text-[12px] font-bold uppercase leading-snug text-stone-400 mb-1">
+                            {t("customerLastVisit")}
+                          </p>
+                          <p className="text-xl font-black text-[#9F7D6B] leading-none truncate max-w-full tabular-nums">
+                            {lastVisitLabel}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="bg-stone-50 rounded-xl px-3 py-3 flex flex-col items-center justify-center text-center">
                         <p className="max-w-full text-center text-[12px] font-bold uppercase leading-snug text-stone-400 mb-1">
                           {t("customerTotalSpent")}
                         </p>
-                        <p className="text-xl font-black text-[#9F7D6B] leading-none tabular-nums">
-                          ${stats.totalSpent.toLocaleString(
-                            locale === "en"
-                              ? "en-US"
-                              : locale === "zh-CN"
-                                ? "zh-CN"
-                                : "zh-TW"
-                          )}
-                        </p>
-                      </div>
-                      <div className="bg-stone-50 rounded-xl min-h-[5rem] px-1.5 py-2 flex flex-col items-center justify-center">
-                        <p className="max-w-full text-center text-[12px] font-bold uppercase leading-snug text-stone-400 mb-1">
-                          {t("customerVisits")}
-                        </p>
-                        <p className="text-xl font-black text-[#9F7D6B] leading-none tabular-nums">
-                          {stats.visits}
-                        </p>
-                      </div>
-                      <div className="bg-stone-50 rounded-xl min-h-[5rem] px-1.5 py-2 flex flex-col items-center justify-center">
-                        <p className="max-w-full text-center text-[12px] font-bold uppercase leading-snug text-stone-400 mb-1">
-                          {t("customerLastVisit")}
-                        </p>
-                        <p className="text-xl font-black text-[#9F7D6B] leading-none truncate max-w-full tabular-nums">
-                          {lastVisitLabel}
+                        <p
+                          className={`max-w-full min-w-0 text-center font-black tabular-nums leading-none text-[#9F7D6B] ${kpiValueSizeClass(
+                            spentDisplay
+                          )}`}
+                        >
+                          {spentDisplay}
                         </p>
                       </div>
                     </div>
