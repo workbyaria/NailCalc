@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 
 /**
  * 美甲算算 NailCalc - 核心組件
@@ -482,6 +482,9 @@ const UI_STRINGS = {
     modalTitle: "消費明細",
     back: "返回",
     copyAndClose: "複製並關閉",
+    checkoutCountdown: "${n} 秒後將自動複製明細",
+    checkoutAdSlot: "贊助版位",
+    errCustomerLimitFree: "免費版客戶上限為 ${max} 位",
 
     newAddonTitle: "新增加購項目",
     addonNamePh: "加購名稱",
@@ -612,6 +615,9 @@ const UI_STRINGS = {
     modalTitle: "消费明细",
     back: "返回",
     copyAndClose: "复制并关闭",
+    checkoutCountdown: "${n} 秒后将自动复制明细",
+    checkoutAdSlot: "赞助版位",
+    errCustomerLimitFree: "免费版客户上限为 ${max} 位",
 
     newAddonTitle: "新增加购项目",
     addonNamePh: "加购名称",
@@ -743,6 +749,9 @@ const UI_STRINGS = {
     modalTitle: "Receipt",
     back: "Back",
     copyAndClose: "Copy & close",
+    checkoutCountdown: "Copying receipt in ${n}s…",
+    checkoutAdSlot: "Sponsor",
+    errCustomerLimitFree: "Free plan: up to ${max} customers.",
 
     newAddonTitle: "Add add-on item",
     addonNamePh: "Item name",
@@ -934,6 +943,13 @@ const DEFAULT_BASE_STYLES = {
 };
 const CUSTOM_BASE_STYLES_STORAGE_KEY = "nail_custom_base_styles";
 const CUSTOMERS_STORAGE_KEY = "nail_customers";
+
+/** 建置時設 `VITE_NAILCALC_LICENSE=free` 啟用免費版（結帳倒數、客戶上限）；未設或非 `free` 為完整版 */
+const IS_FREE_LICENSE =
+  String(import.meta.env.VITE_NAILCALC_LICENSE || "").toLowerCase() === "free";
+const FREE_TIER_CUSTOMER_CAP = 50;
+const FREE_CHECKOUT_GATE_SEC_MIN = 8;
+const FREE_CHECKOUT_GATE_SEC_MAX = 12;
 const DISCOUNT_PRESETS_STORAGE_KEY = "nail_discount_presets";
 const DEFAULT_DISCOUNT_PRESETS = {
   percentValues: [95, 90, 85, 80],
@@ -987,7 +1003,8 @@ const getStoredRecords = () => {
     const raw = localStorage.getItem("nail_records");
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((r) => r && typeof r === "object");
   } catch {
     return [];
   }
@@ -1051,6 +1068,10 @@ const App = () => {
   const [view, setView] = useState("calculator");
   const [copied, setCopied] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  /** 免費版結帳：{ left: 剩餘秒數 }，null 表示未在倒數 */
+  const [checkoutAdGate, setCheckoutAdGate] = useState(null);
+  const [customerCapHint, setCustomerCapHint] = useState("");
+  const checkoutFinalizeRef = useRef(() => {});
   const [newAddonName, setNewAddonName] = useState("");
   const [newAddonPrice, setNewAddonPrice] = useState("");
   const [addonFormError, setAddonFormError] = useState("");
@@ -1222,7 +1243,7 @@ const App = () => {
   const customerStatsMap = useMemo(() => {
     const map = {};
     records.forEach((r) => {
-      if (!r.customerId) return;
+      if (!r || typeof r !== "object" || !r.customerId) return;
       if (!map[r.customerId]) {
         map[r.customerId] = {
           totalSpent: 0,
@@ -1268,7 +1289,7 @@ const App = () => {
   const customerLinkedSpendTotal = useMemo(
     () =>
       records
-        .filter((r) => r.customerId)
+        .filter((r) => r && typeof r === "object" && r.customerId)
         .reduce((acc, r) => acc + (Number(r.amount) || 0), 0),
     [records]
   );
@@ -1279,7 +1300,8 @@ const App = () => {
   }, [customerLinkedSpendTotal, locale]);
 
   const customerVisitCountKpi = useMemo(
-    () => records.filter((r) => r.customerId).length,
+    () =>
+      records.filter((r) => r && typeof r === "object" && r.customerId).length,
     [records]
   );
 
@@ -1346,8 +1368,8 @@ const App = () => {
     document.body.removeChild(textArea);
   };
 
-  // 完成結帳並儲存紀錄
-  const finalizePayment = () => {
+  // 完成結帳並儲存紀錄（寫入紀錄、複製明細、關閉彈窗、重設選項）
+  const commitCheckoutToRecordAndCopy = () => {
     const total = calculateTotal();
     const itemsSummary = [
       selections.removal
@@ -1379,6 +1401,7 @@ const App = () => {
     copyToClipboard();
     setShowModal(false);
     setCheckoutNote("");
+    setCheckoutAdGate(null);
     // 重置選擇
     setSelections({
       removal: null,
@@ -1390,6 +1413,38 @@ const App = () => {
       discountType: "none",
       discountVal: 0,
     });
+  };
+
+  checkoutFinalizeRef.current = commitCheckoutToRecordAndCopy;
+
+  useEffect(() => {
+    if (!checkoutAdGate) return undefined;
+    if (checkoutAdGate.left <= 0) {
+      checkoutFinalizeRef.current();
+      setCheckoutAdGate(null);
+      return undefined;
+    }
+    const tid = setTimeout(() => {
+      setCheckoutAdGate((g) =>
+        g && g.left > 0 ? { left: g.left - 1 } : g
+      );
+    }, 1000);
+    return () => clearTimeout(tid);
+  }, [checkoutAdGate]);
+
+  const handleCopyAndCloseClick = () => {
+    if (IS_FREE_LICENSE) {
+      const span =
+        FREE_CHECKOUT_GATE_SEC_MAX -
+        FREE_CHECKOUT_GATE_SEC_MIN +
+        1;
+      const seconds =
+        FREE_CHECKOUT_GATE_SEC_MIN +
+        Math.floor(Math.random() * span);
+      setCheckoutAdGate({ left: seconds });
+      return;
+    }
+    commitCheckoutToRecordAndCopy();
   };
 
   const deleteRecord = (id) => {
@@ -1407,9 +1462,11 @@ const App = () => {
 
   // 過濾當前選定月份的紀錄
   const filteredRecords = records.filter((r) => {
+    if (!r || typeof r !== "object") return false;
     // 兼容舊數據：如果紀錄沒有 month 屬性，嘗試從 date 字串解析
     if (r.month) return r.month === selectedMonth;
-    const dateParts = r.date.split("/");
+    const raw = r.date != null ? String(r.date) : "";
+    const dateParts = raw.split("/");
     if (dateParts.length >= 2) {
       const m = `${dateParts[0]}-${String(dateParts[1]).padStart(2, "0")}`;
       return m === selectedMonth;
@@ -1541,6 +1598,15 @@ const App = () => {
       setCustomerFormError(t("customerRequired"));
       return;
     }
+    if (
+      IS_FREE_LICENSE &&
+      customers.length >= FREE_TIER_CUSTOMER_CAP
+    ) {
+      setCustomerFormError(
+        t("errCustomerLimitFree", { max: FREE_TIER_CUSTOMER_CAP })
+      );
+      return;
+    }
     const newCustomer = {
       id: Date.now(),
       name,
@@ -1559,6 +1625,15 @@ const App = () => {
   const quickAddCustomerFromSearch = () => {
     const name = customerSearch.trim();
     if (!name) return;
+    if (
+      IS_FREE_LICENSE &&
+      customers.length >= FREE_TIER_CUSTOMER_CAP
+    ) {
+      setCustomerCapHint(
+        t("errCustomerLimitFree", { max: FREE_TIER_CUSTOMER_CAP })
+      );
+      return;
+    }
     const newCustomer = {
       id: Date.now(),
       name,
@@ -1758,10 +1833,18 @@ const App = () => {
             <input
               type="text"
               value={customerSearch}
-              onChange={(e) => setCustomerSearch(e.target.value)}
+              onChange={(e) => {
+                setCustomerSearch(e.target.value);
+                if (customerCapHint) setCustomerCapHint("");
+              }}
               placeholder={t("customerSearchPh")}
               className="w-full text-sm font-medium text-center bg-stone-50 rounded-full px-4 py-2.5 outline-none border border-stone-100 focus:border-[#9F7D6B]"
             />
+            {customerCapHint ? (
+              <p className="text-[11px] text-rose-500 font-medium text-center">
+                {customerCapHint}
+              </p>
+            ) : null}
             <div className="flex items-center justify-center">
               <button
                 type="button"
@@ -1908,7 +1991,7 @@ const App = () => {
                         <span className="text-stone-400 text-xs">$</span>
                         <input
                           type="number"
-                          className="w-20 text-right font-bold text-[#9F7D6B] bg-stone-50 rounded-lg p-2 focus:outline-none"
+                          className="w-20 text-center font-bold text-[#9F7D6B] bg-stone-50 rounded-lg p-2 focus:outline-none"
                           value={selections.addons[item] || ""}
                           onChange={(e) =>
                             setSelections((p) => ({
@@ -2086,7 +2169,7 @@ const App = () => {
                   <span className="text-stone-400 text-xs">$</span>
                   <input
                     type="number"
-                    className="w-20 text-right font-bold text-[#9F7D6B] bg-stone-50 rounded-lg p-2 focus:outline-none"
+                    className="w-20 text-center font-bold text-[#9F7D6B] bg-stone-50 rounded-lg p-2 focus:outline-none"
                     value={selections.customProduct || ""}
                     onChange={(e) =>
                       setSelections((p) => ({
@@ -2114,7 +2197,7 @@ const App = () => {
                   <span className="text-stone-400 text-sm">$</span>
                   <input
                     type="number"
-                    className="w-20 text-right font-bold text-[#9F7D6B] bg-stone-50 rounded-lg p-2 focus:outline-none"
+                    className="w-20 text-center font-bold text-[#9F7D6B] bg-stone-50 rounded-lg p-2 focus:outline-none"
                     value={selections.customOther || ""}
                     onChange={(e) =>
                       setSelections((p) => ({
@@ -2469,7 +2552,9 @@ const App = () => {
                 const spentLocale =
                   locale === "en" ? "en-US" : locale === "zh-CN" ? "zh-CN" : "zh-TW";
                 const spentDisplay = `$${stats.totalSpent.toLocaleString(spentLocale)}`;
-                const history = records.filter((r) => r.customerId === customer.id);
+                const history = records.filter(
+                  (r) => r && typeof r === "object" && r.customerId === customer.id
+                );
                 return (
                   <>
                     <div className="flex items-center justify-between gap-3 mb-3">
@@ -2997,7 +3082,24 @@ const App = () => {
       {/* 結帳明細彈窗 */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-[2rem] w-full max-w-sm p-6 shadow-2xl">
+          <div className="bg-white rounded-[2rem] w-full max-w-sm p-6 shadow-2xl relative">
+            {checkoutAdGate !== null ? (
+              <div className="absolute inset-0 z-10 flex flex-col rounded-[2rem] bg-white p-6">
+                <div className="flex-1 min-h-[9rem] flex flex-col items-center justify-center rounded-2xl bg-stone-100 border border-stone-200 text-stone-400 text-xs font-bold">
+                  {t("checkoutAdSlot")}
+                </div>
+                <p className="text-center text-xs text-stone-500 mt-4 tabular-nums">
+                  {t("checkoutCountdown", { n: checkoutAdGate.left })}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setCheckoutAdGate(null)}
+                  className="mt-4 w-full py-3 rounded-xl bg-stone-100 font-bold text-stone-500 text-sm"
+                >
+                  {t("back")}
+                </button>
+              </div>
+            ) : null}
             <h3 className="text-center font-bold mb-4">{t("modalTitle")}</h3>
             <p className="text-xs text-stone-400 mb-2">
               {t("customerLabel")}: {selectedCustomer?.name || t("noCustomer")}
@@ -3021,7 +3123,7 @@ const App = () => {
                 {t("back")}
               </button>
               <button
-                onClick={finalizePayment}
+                onClick={handleCopyAndCloseClick}
                 className="flex-[2] bg-[#9F7D6B] text-white py-3 px-6 rounded-xl font-bold"
               >
                 {t("copyAndClose")}
