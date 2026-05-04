@@ -1843,11 +1843,11 @@ const App = () => {
           onClick={() => setView("calculator")}
           className="flex items-center gap-3 text-left"
         >
-          <div className="w-9 h-9 bg-[#9F7D6B] rounded-xl flex items-center justify-center">
+          <div className="w-9 h-9 bg-[#9F7D6B] rounded-xl overflow-hidden flex items-center justify-center shrink-0">
             <img
               src="/logo-mark.png"
               alt="NailCalc"
-              className="w-10 h-10"
+              className="h-full w-full object-cover"
               draggable="false"
             />
           </div>
