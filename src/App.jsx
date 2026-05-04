@@ -389,6 +389,8 @@ const getInitialLocale = () => {
 const UI_STRINGS = {
   "zh-TW": {
     appTitle: "美甲算算 NailCalc",
+    appMetaDescription:
+      "美甲工作室結帳小工具：卸甲、款式、加購、護理與折抵試算，一鍵複製消費明細與客戶管理。",
     languageLabel: "介面語言",
     languageLabelTag: "Language",
     language_zhTW: "繁體中文",
@@ -522,6 +524,8 @@ const UI_STRINGS = {
   },
   "zh-CN": {
     appTitle: "美甲算算 NailCalc",
+    appMetaDescription:
+      "美甲工作室结账小工具：卸甲、款式、加购、护理与折抵试算，一键复制消费明细与客户管理。",
     languageLabel: "界面语言",
     languageLabelTag: "Language",
     language_zhTW: "繁体中文",
@@ -655,6 +659,8 @@ const UI_STRINGS = {
   },
   en: {
     appTitle: "NailCalc",
+    appMetaDescription:
+      "Checkout helper for nail salons: removal, styles, add-ons, spa, discounts—calculate totals, copy receipts, and manage clients.",
     languageLabel: "Language",
     languageLabelTag: "Language",
     language_zhTW: "Traditional Chinese",
@@ -798,6 +804,75 @@ const tString = (locale, key, vars) => {
     });
   }
   return s;
+};
+
+const htmlLangFromAppLocale = (locale) => {
+  if (locale === "zh-CN") return "zh-Hans";
+  if (locale === "zh-TW") return "zh-Hant";
+  return "en";
+};
+
+const ogLocaleFromAppLocale = (locale) => {
+  if (locale === "zh-CN") return "zh_CN";
+  if (locale === "zh-TW") return "zh_TW";
+  return "en_US";
+};
+
+/**
+ * 依介面語言同步分頁標題、html lang、SEO／社群預覽用 meta（og:*、twitter:*）。
+ * 註：多數通訊軟體的連結預覽只讀首次 HTML，不一定執行 JS；index.html 內預設英文仍建議保留。
+ */
+const syncDocumentI18nMetadata = (locale) => {
+  if (typeof document === "undefined") return;
+  const title = tString(locale, "appTitle");
+  const description = tString(locale, "appMetaDescription");
+  document.title = title;
+  document.documentElement.lang = htmlLangFromAppLocale(locale);
+
+  const setNamedMeta = (name, content) => {
+    let el = document.querySelector(`meta[name="${name}"]`);
+    if (!el) {
+      el = document.createElement("meta");
+      el.setAttribute("name", name);
+      document.head.appendChild(el);
+    }
+    el.setAttribute("content", content);
+  };
+
+  const setPropertyMeta = (property, content) => {
+    let el = document.querySelector(`meta[property="${property}"]`);
+    if (!el) {
+      el = document.createElement("meta");
+      el.setAttribute("property", property);
+      document.head.appendChild(el);
+    }
+    el.setAttribute("content", content);
+  };
+
+  setNamedMeta("description", description);
+
+  const origin =
+    typeof window !== "undefined" && window.location?.origin
+      ? window.location.origin
+      : "";
+  const pageUrl =
+    origin && typeof window !== "undefined"
+      ? `${window.location.pathname}${window.location.search}`
+      : "";
+  const absoluteUrl = origin && pageUrl ? `${origin}${pageUrl}` : "";
+  const imageAbs = origin ? `${origin}/app-icon.png` : "";
+
+  setPropertyMeta("og:title", title);
+  setPropertyMeta("og:description", description);
+  setPropertyMeta("og:type", "website");
+  if (absoluteUrl) setPropertyMeta("og:url", absoluteUrl);
+  if (imageAbs) setPropertyMeta("og:image", imageAbs);
+  setPropertyMeta("og:locale", ogLocaleFromAppLocale(locale));
+
+  setNamedMeta("twitter:card", "summary_large_image");
+  setNamedMeta("twitter:title", title);
+  setNamedMeta("twitter:description", description);
+  if (imageAbs) setNamedMeta("twitter:image", imageAbs);
 };
 
 const formatZhDiscountFromPercent = (percent) => {
@@ -1114,6 +1189,10 @@ const App = () => {
     } catch {
       // ignore
     }
+  }, [locale]);
+
+  useEffect(() => {
+    syncDocumentI18nMetadata(locale);
   }, [locale]);
 
   useEffect(() => {
