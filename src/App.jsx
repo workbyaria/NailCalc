@@ -416,6 +416,7 @@ const UI_STRINGS = {
     sectionDiscountLabel: "Discount",
 
     perFinger: "/ 指",
+    addonStyleAdminHint: "結帳時輸入金額",
 
     otherProduct: "產品加購",
     otherService: "其他服務",
@@ -545,6 +546,7 @@ const UI_STRINGS = {
     sectionDiscountLabel: "Discount",
 
     perFinger: "/ 指",
+    addonStyleAdminHint: "结账时输入金额",
 
     otherProduct: "产品加购",
     otherService: "其他服务",
@@ -674,6 +676,7 @@ const UI_STRINGS = {
     sectionDiscountLabel: "Discount",
 
     perFinger: "/ nail",
+    addonStyleAdminHint: "Enter amount at checkout",
 
     otherProduct: "Product add-on",
     otherService: "Additional services",
@@ -844,8 +847,7 @@ const PRICE_LABELS = {
     addons: {
       延甲: "延甲",
       水晶: "水晶",
-      手繪: "手繪",
-      裝飾: "裝飾",
+      造型: "造型",
     },
     spa: {
       手部基礎: "手部基礎",
@@ -872,8 +874,7 @@ const PRICE_LABELS = {
     addons: {
       延甲: "延长",
       水晶: "水晶",
-      手繪: "手绘",
-      裝飾: "装饰",
+      造型: "造型",
     },
     spa: {
       手部基礎: "手部基础",
@@ -900,8 +901,7 @@ const PRICE_LABELS = {
     addons: {
       延甲: "Nail Extensions",
       水晶: "Builder Gel",
-      手繪: "Hand-painted Designs",
-      裝飾: "Nail Art",
+      造型: "Nail Art",
     },
     spa: {
       手部基礎: "Basic Manicure",
@@ -918,9 +918,11 @@ const priceItemLabel = (locale, cat, key) => {
   return key;
 };
 
-const DEFAULT_ADDONS = { 延甲: 50, 水晶: 100, 手繪: 50, 裝飾: 30 };
+const DEFAULT_ADDONS = { 延甲: 50, 水晶: 100, 造型: 0 };
 const CUSTOM_ADDONS_STORAGE_KEY = "nail_custom_addons";
 const ADDON_QUICK_QTY_TARGETS = new Set(["延甲", "水晶"]);
+/** 加購項目：結帳時直接輸入總金額（非每指單價 × 指數） */
+const ADDON_DIRECT_AMOUNT_KEYS = new Set(["造型"]);
 const ADDON_QUICK_QTY_VALUES = [3, 5, 10];
 const DEFAULT_BASE_STYLES = {
   透明建甲: 800,
@@ -1176,7 +1178,12 @@ const App = () => {
     if (selections.removal) subtotal += prices.removal[selections.removal] || 0;
     if (selections.base) subtotal += prices.base[selections.base] || 0;
     Object.keys(selections.addons).forEach((key) => {
-      subtotal += (prices.addons[key] || 0) * (selections.addons[key] || 0);
+      const sel = selections.addons[key] || 0;
+      if (ADDON_DIRECT_AMOUNT_KEYS.has(key)) {
+        subtotal += Math.max(0, Number(sel) || 0);
+      } else {
+        subtotal += (prices.addons[key] || 0) * sel;
+      }
     });
     selections.spa.forEach((item) => {
       subtotal += prices.spa[item] || 0;
@@ -1296,10 +1303,17 @@ const App = () => {
         prices.base[selections.base]
       }\n`;
     Object.keys(selections.addons).forEach((key) => {
-      if (selections.addons[key] > 0)
-        text += `▫️ ${priceItemLabel(locale, "addons", key)} x${
-          selections.addons[key]
-        }: $${prices.addons[key] * selections.addons[key]}\n`;
+      const v = selections.addons[key];
+      if (!v || v <= 0) return;
+      if (ADDON_DIRECT_AMOUNT_KEYS.has(key)) {
+        text += `▫️ ${priceItemLabel(locale, "addons", key)}: $${Math.round(
+          Number(v) || 0
+        )}\n`;
+      } else {
+        text += `▫️ ${priceItemLabel(locale, "addons", key)} x${v}: $${
+          prices.addons[key] * v
+        }\n`;
+      }
     });
     selections.spa.forEach((item) => {
       text += `▫️ ${priceItemLabel(locale, "spa", item)}: $${prices.spa[item]}\n`;
@@ -1728,7 +1742,7 @@ const App = () => {
             style={{ fontSize: theme.fontSize.btnMain }}
           >
             <span className="block font-bold text-[#9F7D6B]">{greetingLines.line1}</span>
-            <span className="block mt-1 text-sm font-medium text-[#5F4636]/80">
+            <span className="block mt-1 text-sm text-[#9F7D6B]">
               {greetingLines.line2}
             </span>
           </p>
@@ -1882,94 +1896,131 @@ const App = () => {
                   key={item}
                   className="bg-white p-4 rounded-2xl border border-stone-200"
                 >
-                  <div className="flex justify-between items-center gap-3">
-                    <div className="flex items-baseline gap-2">
+                  {ADDON_DIRECT_AMOUNT_KEYS.has(item) ? (
+                    <div className="flex justify-between items-center gap-3">
                       <div
                         style={{ fontSize: theme.fontSize.btnMain }}
                         className="font-bold"
                       >
                         {priceItemLabel(locale, "addons", item)}
                       </div>
-                      <div
-                        style={{
-                          fontSize: theme.fontSize.btnMain,
-                          color: theme.textMain,
-                        }}
-                      >
-                        ${prices.addons[item]} {t("perFinger")}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() =>
-                          setSelections((p) => ({
-                            ...p,
-                            addons: {
-                              ...p.addons,
-                              [item]: Math.max(0, (p.addons[item] || 0) - 1),
-                            },
-                          }))
-                        }
-                        className="w-8 h-8 rounded-lg border border-stone-200 flex items-center justify-center"
-                      >
-                        <Icon name="minus" size={14} />
-                      </button>
-                      <input
-                        type="number"
-                        value={selections.addons[item] || 0}
-                        onChange={(e) =>
-                          setSelections((p) => ({
-                            ...p,
-                            addons: {
-                              ...p.addons,
-                              [item]: parseInt(e.target.value) || 0,
-                            },
-                          }))
-                        }
-                        onFocus={(e) => e.target.select()}
-                        className="w-10 text-center font-bold text-[#9F7D6B] bg-transparent outline-none"
-                      />
-                      <button
-                        onClick={() =>
-                          setSelections((p) => ({
-                            ...p,
-                            addons: {
-                              ...p.addons,
-                              [item]: (p.addons[item] || 0) + 1,
-                            },
-                          }))
-                        }
-                        className="w-8 h-8 rounded-lg bg-[#9F7D6B] text-white flex items-center justify-center"
-                      >
-                        <Icon name="plus" size={14} />
-                      </button>
-                    </div>
-                  </div>
-                  {ADDON_QUICK_QTY_TARGETS.has(item) && (
-                    <div className="mt-3 w-[7.5rem] ml-auto flex items-center justify-between">
-                      {ADDON_QUICK_QTY_VALUES.map((qty) => (
-                        <button
-                          key={qty}
-                          type="button"
-                          onClick={() =>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <span className="text-stone-400 text-xs">$</span>
+                        <input
+                          type="number"
+                          className="w-20 text-right font-bold text-[#9F7D6B] bg-stone-50 rounded-lg p-2 focus:outline-none"
+                          value={selections.addons[item] || ""}
+                          onChange={(e) =>
                             setSelections((p) => ({
                               ...p,
                               addons: {
                                 ...p.addons,
-                                [item]: qty,
+                                [item]: Math.max(
+                                  0,
+                                  parseInt(e.target.value, 10) || 0
+                                ),
                               },
                             }))
                           }
-                          className={`w-8 h-8 rounded-lg border text-xs font-bold transition-colors ${
-                            (selections.addons[item] || 0) === qty
-                              ? "border-[#9F7D6B] bg-[#EBDCD3] text-[#9F7D6B]"
-                              : "border-stone-200 bg-white text-[#9F7D6B]"
-                          }`}
-                        >
-                          {qty}
-                        </button>
-                      ))}
+                          onFocus={(e) => e.target.select()}
+                        />
+                      </div>
                     </div>
+                  ) : (
+                    <>
+                      <div className="flex justify-between items-center gap-3">
+                        <div className="flex items-baseline gap-2">
+                          <div
+                            style={{ fontSize: theme.fontSize.btnMain }}
+                            className="font-bold"
+                          >
+                            {priceItemLabel(locale, "addons", item)}
+                          </div>
+                          <div
+                            style={{
+                              fontSize: theme.fontSize.btnMain,
+                              color: theme.textMain,
+                            }}
+                          >
+                            ${prices.addons[item]} {t("perFinger")}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() =>
+                              setSelections((p) => ({
+                                ...p,
+                                addons: {
+                                  ...p.addons,
+                                  [item]: Math.max(
+                                    0,
+                                    (p.addons[item] || 0) - 1
+                                  ),
+                                },
+                              }))
+                            }
+                            className="w-8 h-8 rounded-lg border border-stone-200 flex items-center justify-center"
+                          >
+                            <Icon name="minus" size={14} />
+                          </button>
+                          <input
+                            type="number"
+                            value={selections.addons[item] || 0}
+                            onChange={(e) =>
+                              setSelections((p) => ({
+                                ...p,
+                                addons: {
+                                  ...p.addons,
+                                  [item]: parseInt(e.target.value) || 0,
+                                },
+                              }))
+                            }
+                            onFocus={(e) => e.target.select()}
+                            className="w-10 text-center font-bold text-[#9F7D6B] bg-transparent outline-none"
+                          />
+                          <button
+                            onClick={() =>
+                              setSelections((p) => ({
+                                ...p,
+                                addons: {
+                                  ...p.addons,
+                                  [item]: (p.addons[item] || 0) + 1,
+                                },
+                              }))
+                            }
+                            className="w-8 h-8 rounded-lg bg-[#9F7D6B] text-white flex items-center justify-center"
+                          >
+                            <Icon name="plus" size={14} />
+                          </button>
+                        </div>
+                      </div>
+                      {ADDON_QUICK_QTY_TARGETS.has(item) && (
+                        <div className="mt-3 w-[7.5rem] ml-auto flex items-center justify-between">
+                          {ADDON_QUICK_QTY_VALUES.map((qty) => (
+                            <button
+                              key={qty}
+                              type="button"
+                              onClick={() =>
+                                setSelections((p) => ({
+                                  ...p,
+                                  addons: {
+                                    ...p.addons,
+                                    [item]: qty,
+                                  },
+                                }))
+                              }
+                              className={`w-8 h-8 rounded-lg border text-xs font-bold transition-colors ${
+                                (selections.addons[item] || 0) === qty
+                                  ? "border-[#9F7D6B] bg-[#EBDCD3] text-[#9F7D6B]"
+                                  : "border-stone-200 bg-white text-[#9F7D6B]"
+                              }`}
+                            >
+                              {qty}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               ))}
@@ -2674,18 +2725,27 @@ const App = () => {
                     {priceItemLabel(locale, cat, name)}
                   </span>
                   <div className="flex items-center gap-2">
-                    <input
-                      type="number"
-                      value={price}
-                      onFocus={(e) => e.target.select()}
-                      onChange={(e) =>
-                        setPrices((prev) => ({
-                          ...prev,
-                          [cat]: { ...prev[cat], [name]: Number(e.target.value) },
-                        }))
-                      }
-                      className="w-20 text-center font-bold bg-stone-50 rounded-3xl px-3 py-1 text-[#9F7D6B] outline-none shadow-sm"
-                    />
+                    {cat === "addons" && ADDON_DIRECT_AMOUNT_KEYS.has(name) ? (
+                      <span className="text-[11px] font-medium text-stone-400 text-right max-w-[10rem]">
+                        {t("addonStyleAdminHint")}
+                      </span>
+                    ) : (
+                      <input
+                        type="number"
+                        value={price}
+                        onFocus={(e) => e.target.select()}
+                        onChange={(e) =>
+                          setPrices((prev) => ({
+                            ...prev,
+                            [cat]: {
+                              ...prev[cat],
+                              [name]: Number(e.target.value),
+                            },
+                          }))
+                        }
+                        className="w-20 text-center font-bold bg-stone-50 rounded-3xl px-3 py-1 text-[#9F7D6B] outline-none shadow-sm"
+                      />
+                    )}
                     {cat === "addons" && !(name in DEFAULT_ADDONS) && (
                       <button
                         type="button"
